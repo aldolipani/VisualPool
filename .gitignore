@@ -1,17 +1,19 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 # compiled output
-/dist
-/tmp
+/frontend/VisualPool/dist
+/frontend/VisualPool/tmp
 
 # dependencies
-/node_modules
-/bower_components
+/frontend/VisualPool/node_modules
+/frontend/VisualPool/bower_components
 
 # misc
-/.sass-cache
-/connect.lock
-/coverage/*
-/libpeerconnection.log
-npm-debug.log*
-testem.log
+/frontend/VisualPool/.sass-cache
+/frontend/VisualPool/connect.lock
+/frontend/VisualPool/coverage/*
+/frontend/VisualPool/libpeerconnection.log
+/frontend/VisualPool/npm-debug.log*
+/frontend/VisualPool/testem.log
+
+.DS_Store
