@@ -1,0 +1,1 @@
+/Users/aldo/Projects/GitHub/VisualPool/frontend/VisualPool/app/components/canvas-visual-pool.js

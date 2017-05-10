@@ -1,0 +1,1 @@
+/Users/aldo/Projects/GitHub/VisualPool/frontend/VisualPool/node_modules/broccoli-babel-transpiler/node_modules/babel-core/browser-polyfill.js

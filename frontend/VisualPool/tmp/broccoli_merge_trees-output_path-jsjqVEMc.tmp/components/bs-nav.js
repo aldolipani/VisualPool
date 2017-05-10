@@ -1,0 +1,1 @@
+/Users/aldo/Projects/GitHub/VisualPool/frontend/VisualPool/node_modules/ember-bootstrap/app/components/bs-nav.js

@@ -1,0 +1,1 @@
+/Users/aldo/Projects/GitHub/VisualPool/frontend/VisualPool/tmp/creator-output_path-fPcwMewk.tmp/version.js

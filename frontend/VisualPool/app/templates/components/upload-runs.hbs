@@ -1,0 +1,16 @@
+<div class="form-horizontal">
+    <div class="form-group">
+        <div class="col-sm-2">
+            <label class="btn btn-default btn-file">
+                Upload Runs <input multiple="true" onchange={{action "upload"}} type="file" style="display: none;"/>
+            </label>
+        </div>
+        <label class="col-sm-2 control-label">Run Size:</label>
+        <div class="col-sm-2">
+            <input {{bind-attr id="item.textboxId"}}
+                    type="text" {{bind-attr value="item.value"}}
+                    onblur={{action "poolSizeChange" value="target.value"}}
+                            class="form-control" value={{poolSize}}/>
+        </div>
+    </div>
+</div>

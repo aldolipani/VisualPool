@@ -1,0 +1,15 @@
+<form class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-6 control-label">Topic:</label>
+        <div class="col-sm-6">
+            <select onchange={{action "selectTopic" value="target.value"}} class="form-control"
+                    disabled="{{if noTopics "disabled"}}">
+              {{#each topics as |topic|}}
+                  <option>{{topic.id}}</option>
+              {{else}}
+                  <option>Null</option>
+              {{/each}}
+            </select>
+        </div>
+    </div>
+</form>

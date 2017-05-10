@@ -1,0 +1,1 @@
+/Users/aldo/Projects/GitHub/VisualPool/frontend/VisualPool/app/components/poolstrategy-player.js
