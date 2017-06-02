@@ -10,6 +10,9 @@ module.exports = function(defaults) {
     babel: {
       includePolyfill: true,
     },
+    sassOptions: {
+      includePaths: [ 'node_modules/ember-dialog/addon/styles' ]
+    },
   });
 
   // Use `app.import` to add additional libraries to the generated

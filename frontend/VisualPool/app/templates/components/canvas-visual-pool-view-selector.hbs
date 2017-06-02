@@ -1,0 +1,11 @@
+<div class="btn-group btn-group-justified" role="group" aria-label="Justified button group">
+  <a href="#" class="btn btn-default" role="button" {{action "changeView"}}>
+    {{#if normalView}}
+      <span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span>
+    {{else if uniqueView}}
+      <span class="glyphicon glyphicon-align-left" aria-hidden="true"></span>
+    {{else if poolView}}
+      <span class="glyphicon glyphicon-indent-right" aria-hidden="true"></span>
+    {{/if}}
+  </a>
+</div>

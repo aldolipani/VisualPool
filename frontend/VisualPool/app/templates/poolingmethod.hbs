@@ -1,59 +1,61 @@
 <div class="row">
-    <div class="col-md-6">
-      {{poolstrategy-selector
-        poolStrategies=pool.lPoolStrategy
-        selected=poolStrategySelected}}
-    </div>
-    <div class="col-md-2">
-      {{#if loading}}
-      {{else}}
-        {{topic-selector selectTopic="selectTopic" topics=pool.lTopicPool}}
-      {{/if}}
-    </div>
-    <div class="col-md-2">
-      <form class="form-horizontal">
-      <div class="form-group">
-        <label class="control-label">Statistics</label>
+  <div class="container col-md-8">
+    <div class="row">
+      <div class="col-md-7">
+        {{poolstrategy-selector
+          poolStrategies=pool.lPoolStrategy
+          selected=poolStrategySelected}}
       </div>
-      </form>
-    </div>
-    <div class="col-md-2">
-      {{poolstrategy-player
-        stepForward="stepForward"
-        fastForward="fastForward"}}
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-8">
-      {{canvas-visual-pool
-        topicSelected=topicSelected
-        lPooledDocument=lPooledDocument}}
-    </div>
-    <div class="col-md-2">
-
-      <p>Some other text here. </p>
-      <div class="math">
-        f(x) = \sqrt{1+x}, \quad x \ge -1  </div>
-    </div>
-    <div class="col-md-2">
-      {{poolstrategy-log
-        lPooledDocument=lPooledDocument}}
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-8">
-      {{upload-runs updateTopicSelector="updateTopicSelector"}}
-    </div>
-    <div class="col-md-2">
-      {{upload-qrels}}
-    </div>
-    <div class="col-md-2">
-      <div class="form-horizontal">
-        <div class="form-group">
-          <label class="btn btn-default btn-file">
-            Download QRels  <input multiple="true" style="display: none;"/>
-          </label>
-        </div>
+      <div class="col-md-4">
+        {{#if loading}}
+        {{else}}
+          {{topic-selector selectTopic="selectTopic" topics=pool.lTopicPool}}
+        {{/if}}
+      </div>
+      <div class="col-md-1">
+        {{canvas-visual-pool-view-selector
+          viewSelector=viewSelector}}
       </div>
     </div>
+    <div class="row">
+      <div class="col-md-12">
+        {{canvas-visual-pool
+          viewSelector=viewSelector
+          topicSelected=topicSelected
+          lPooledDocument=lPooledDocument}}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    {{poolstrategy-stats
+      topicSelected=topicSelected
+      lPooledDocument=lPooledDocument}}
+  </div>
+  <div class="container col-md-2">
+    <div class="row">
+      <div class="col-md-12">
+        {{poolstrategy-player
+          stepForward="stepForward"
+          fastForward="fastForward"}}
+      </div>
+    </div>
+    <div class="row" style="margin-top:7px">
+      <div class="col-md-12">
+        {{poolstrategy-log
+          lPooledDocument=lPooledDocument}}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-8">
+    {{upload-runs updateTopicSelector="updateTopicSelector"}}
+  </div>
+  <div class="col-md-2">
+    {{upload-qrels}}
+  </div>
+  <div class="col-md-2">
+    {{download-qrels
+      lPooledDocument=lPooledDocument}}
+  </div>
 </div>

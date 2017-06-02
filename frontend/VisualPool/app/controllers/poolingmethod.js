@@ -2,14 +2,18 @@ import Ember from "ember";
 
 export default Ember.Controller.extend({
   pool:null,
+  viewSelector:0,
   lPooledDocument: [],
   poolStrategySelected: null,
   topicSelected: null,
   loading: false,
+  askForRelevance(topic, document, ifRelevant, ifNotRelevant){
+    this.get("dialog").confirm("messages/isitrelevant", { document, topic }).then(ifRelevant, ifNotRelevant);
+  },
   actions: {
     updateTopicSelector() {
       this.set('loading', true);
-      var _this = this;
+      let _this = this;
       Ember.run.later(function () {
         _this.set('loading', false);
       }, 100);
@@ -30,13 +34,44 @@ export default Ember.Controller.extend({
       let pooledDocument = generator.next();
       if (pooledDocument.value) {
         console.log(pooledDocument);
-        this.get("lPooledDocument").push(pooledDocument.value);
+        if(pooledDocument.value.status !== -1) {
+          this.get("lPooledDocument").pushObject(
+            {
+              'topic': topic,
+              'document': pooledDocument.value.doc,
+              'rel': pooledDocument.value.status
+            });
+        }else{
+          this.askForRelevance(topic, pooledDocument.value.doc,
+            () => {
+              this.get("lPooledDocument").pushObject(
+                {
+                  'topic': topic,
+                  'document': pooledDocument.value.doc,
+                  'rel': 1
+                });
+            },
+            () => {
+              this.get("lPooledDocument").pushObject(
+                {
+                  'topic': topic,
+                  'document': pooledDocument.value.doc,
+                  'rel': 0
+                });
+            });
+        }
       } else {
         let evaluator = strategy.getPoolEvaluator(topic);
         pooledDocument = evaluator.next();
         if (pooledDocument.value) {
           console.log(pooledDocument);
-          this.get("lPooledDocument").push(pooledDocument.value);
+          this.get("lPooledDocument").pushObject(
+            {
+              'topic':topic,
+              'document':pooledDocument.value.doc,
+              'rel':pooledDocument.value.status
+            }
+          );
         }
       }
     },
@@ -49,13 +84,25 @@ export default Ember.Controller.extend({
       let generator = strategy.getPoolGenerator(topic);
       let pooledDocument = generator.next();
       while (pooledDocument.value) {
-        this.get("lPooledDocument").push(pooledDocument.value);
+        this.get("lPooledDocument").pushObject(
+          {
+            'topic':topic,
+            'document':pooledDocument.value.doc,
+            'rel':pooledDocument.value.status
+          }
+        );
         pooledDocument = generator.next();
       }
       let evaluator = strategy.getPoolEvaluator(topic);
       pooledDocument = evaluator.next();
       while(pooledDocument.value) {
-        this.get("lPooledDocument").push(pooledDocument.value);
+        this.get("lPooledDocument").pushObject(
+          {
+            'topic':topic,
+            'document':pooledDocument.value.doc,
+            'rel':pooledDocument.value.status
+          }
+        );
         pooledDocument = evaluator.next();
       }
     }

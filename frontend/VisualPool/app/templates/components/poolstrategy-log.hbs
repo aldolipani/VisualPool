@@ -1,61 +1,17 @@
-<!--<div>
-{{#each lPooledDocument as |pooledDocument|}}
-  <div>{{pooledDocument.id}}</div>
-{{/each}}
-</div>-->
-<div class="table-responsive">
-  <div class="bodycontainer scrollable">
-    <table class="table table-hover table-striped table-condensed table-scrollable">
-      <tbody>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-          <tr class="warning">
-            <td>WSDNSAALDS3</td>
-          </tr>
-      </tbody>
-    </table>
+<div class="panel panel-default">
+  <div class="panel-body" style="height:calc(100vh - 200px);max-height:calc(100vh - 200px);overflow-y:scroll;">
+    <div class="table-responsive">
+      <div class="bodycontainer scrollable">
+        <table class="table table-hover table-striped table-condensed">
+          <tbody>
+          {{#each reverse as |pooledDocument|}}
+            <tr class="{{poolstrategy-log-rel pooledDocument.rel}}">
+              <td>{{pooledDocument.topic}}:{{pooledDocument.document}}</td>
+            </tr>
+          {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>

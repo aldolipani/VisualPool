@@ -1,3 +1,5 @@
+import Ember from "ember";
+
 class TopicPool {
   constructor(id) {
     this.id = id;
@@ -11,7 +13,7 @@ class Pool {
     this.qRels = null;
     this.lRuns = [];
     this.mTopicPool = {};
-    this.lTopicPool = [];
+    this.lTopicPool = Ember.A();
     this.lPoolStrategy = [
       new DepthD(),
       new TakeN()
@@ -34,16 +36,12 @@ class Pool {
     for (let key in runs.mRun) {
       if (!this.mTopicPool[key]) {
         this.mTopicPool[key] = new TopicPool(key);
+        this.lTopicPool.pushObject(this.mTopicPool[key]);
       }
       this.addRun(runs.mRun[key], key);
     }
-    this.lRuns.push(runs);
+    this.lRuns.pushObject(runs);
     this.initilizePoolStrategies();
-    for (let key in this.mTopicPool) {
-      if(!this.lTopicPool[this.mTopicPool[key]]) {
-        this.lTopicPool.push(this.mTopicPool[key]);
-      }
-    }
   }
 
   addRun(run, topic) {

@@ -9,8 +9,8 @@
         <div class="col-sm-2">
             <input {{bind-attr id="item.textboxId"}}
                     type="text" {{bind-attr value="item.value"}}
-                    onblur={{action "poolSizeChange" value="target.value"}}
-                            class="form-control" value={{poolSize}}/>
+                    onblur={{action "runSizeChange" value="target.value"}}
+                            class="form-control" value={{runSize}}/>
         </div>
     </div>
 </div>

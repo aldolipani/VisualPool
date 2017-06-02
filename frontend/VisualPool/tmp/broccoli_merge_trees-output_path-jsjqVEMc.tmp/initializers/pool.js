@@ -1,1 +1,0 @@
-/Users/aldo/Projects/GitHub/VisualPool/frontend/VisualPool/app/initializers/pool.js

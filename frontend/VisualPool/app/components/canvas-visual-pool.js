@@ -13,7 +13,7 @@ class LRunsViewer {
   }
 
   updateDocument(pooledDocument, topic) {
-    this.topicDocument[topic][pooledDocument.doc] = pooledDocument.status;
+    this.topicDocument[topic][pooledDocument.document] = pooledDocument.rel;
   }
 
   getMaxNRunRecords(runs) {
@@ -39,20 +39,51 @@ class LRunsViewer {
     }
   }
 
-  draw(topic) {
-    var i = 0;
-    var w = (this.p.width - this.x) / this.nRuns;
-    var h = (this.p.height - this.y) / this.maxNRunRecords;
-    for (let key in this.mRuns) {
-      this.p.textAlign(this.p.LEFT, this.p.BASELINE);
-      this.p.fill("black");
-      this.p.text(key, this.x + w * i + 5, this.y + 5);
-      this.mRuns[key].draw(this.x + w * i, this.y + 10, w, h, topic);
-      i++;
+  getMaxSizeRun(mRuns, topic){
+    let max = 0;
+    for (let key in mRuns) {
+      if(mRuns[key].runs.mRun[topic] && mRuns[key].runs.mRun[topic].lRunRecord.length > max){
+        max = mRuns[key].runs.mRun[topic].lRunRecord.length;
+      }
+    }
+    return max;
+  }
+
+  draw(topic, viewSelector) {
+    let w = (this.p.width - this.x) / this.nRuns;
+    let h = (this.p.height - this.y) / this.maxNRunRecords;
+    let i = 0;
+
+    if(viewSelector === 0) {
+      for (let key in this.mRuns) {
+        this.p.textAlign(this.p.LEFT, this.p.BASELINE);
+        //this.p.fill("black");
+        //this.p.text(key, this.x + w * i + 5, this.y + 5);
+        this.mRuns[key].draw(this.x + w * i, this.y + 10, w, h, topic, viewSelector);
+        i++;
+      }
+    }else{
+      let viewDoc = new Set();
+      let maxJ = this.getMaxSizeRun(this.mRuns, topic);
+      for(let j = 0; j < maxJ; j++) {
+        i = 0;
+        for (let key in this.mRuns) {
+          this.p.textAlign(this.p.LEFT, this.p.BASELINE);
+          if(this.mRuns[key].runs.mRun[topic].lRunRecord.length > j && !viewDoc.has(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc)) {
+            viewDoc.add(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc);
+            this.mRuns[key].drawSingleDoc(j, this.x + w * i, this.y + 10, w, h, topic, viewSelector);
+            if(viewSelector === 2) {
+              i = (i + 1) % Object.keys(this.mRuns).length;
+            }
+          }
+          if(viewSelector === 1) {
+            i = (i + 1) % Object.keys(this.mRuns).length;
+          }
+        }
+      }
     }
   }
 }
-
 
 const EnumPooledDocumentState = {
   UNKNOWN: -3,
@@ -91,11 +122,11 @@ class RunsViewer {
     p.noStroke();
     if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNSELECTED) {
       p.fill("#DDDDDD");
-    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.RELEVANT){
+    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.RELEVANT) {
       p.fill("#009E73");
-    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.NON_RELEVANT){
+    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.NON_RELEVANT) {
       p.fill("#000000");
-    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNKNOWN){
+    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNKNOWN) {
       p.fill("#9E002A");
     } else {
       p.fill("#E69F00"); // selected
@@ -106,26 +137,35 @@ class RunsViewer {
 
   draw(x, y, w, h, topic) {
     let runs = this.runs;
-    if(runs.mRun[topic]) {
+    if (runs.mRun[topic]) {
       for (let i = 0; i < runs.mRun[topic].lRunRecord.length; i++) {
         this.drawDoc(runs.mRun[topic].lRunRecord[i].doc, x, y + i * h, w - 1, h, topic);
       }
+    }
+  }
+
+  drawSingleDoc(docIndex, x, y, w, h, topic) {
+    let runs = this.runs;
+    if (runs.mRun[topic]) {
+      let i = docIndex;
+      this.drawDoc(runs.mRun[topic].lRunRecord[i].doc, x, y + i * h, w - 1, h, topic);
     }
   }
 }
 
 export default Ember.Component.extend({
   //store: Ember.inject.service(),
+  viewSelector:0,
   lPooledDocument: [],
   sketch: null,
   didRender(){
     //var pool = this.pool;
-    var lRuns = this.lRuns;
-    var _this = this;
+    let lRuns = this.lRuns;
+    let _this = this;
     if (!this.sketch) {
       this.sketch = function (p) {
-        var canvasContainer = this.$('#canvasVisualPoolContainer');
-        var lRunsViewer = new LRunsViewer(0, 20, p);
+        var canvasContainer = Ember.$('#canvasVisualPoolContainer');
+        var lRunsViewer = new LRunsViewer(0, 10, p);
         var lPooledDocument_i = 0;
 
         p.setup = function () {
@@ -136,6 +176,7 @@ export default Ember.Component.extend({
 
         var nRuns = 0;
         p.draw = function () {
+          let viewSelector = _this.get("viewSelector");
           var topicSelected = _this.get("topicSelected");
           p.background(255);
 
@@ -145,14 +186,14 @@ export default Ember.Component.extend({
             // update scale docs
             // update runs
           }
-          let lPooledDocument = _this.get("lPooledDocument");
+          var lPooledDocument = _this.get("lPooledDocument");
           while (lPooledDocument_i < lPooledDocument.length) {
             lRunsViewer.updateDocument(lPooledDocument[lPooledDocument_i], topicSelected);
             lPooledDocument_i++;
           }
 
           if (topicSelected) {
-            lRunsViewer.draw(topicSelected);
+            lRunsViewer.draw(topicSelected, viewSelector);
           }
           //p.text(nRuns, 50, 20);
           //if(pool.lTopicPool[0])
@@ -161,8 +202,7 @@ export default Ember.Component.extend({
           //p.text("Pool", 300, 20);
           p.textAlign(p.LEFT, p.BASELINE);
           p.fill("black");
-          p.text("Runs", 0, 10);
-
+          //p.text("Runs", 0, 10);
         };
 
         p.windowResized = function () {
@@ -178,49 +218,3 @@ export default Ember.Component.extend({
     }
   }
 });
-
-
-/*class TopicSelector { // To be implemented as a component
- // value
- constructor(x, y, p){
- this.x = x;
- this.y = y;
- this.p = p;
- }
- draw(topics){
- var p = this.p;
- var yGap = 20;
- var cx = this.x;
- var cy = this.y;
- p.fill(0);
- p.stroke(0);
- p.strokeWeight(0.1);
- p.textAlign(p.LEFT, p.BASELINE);
- p.text("Topic Selector", this.x, this.y);
- if(topics.length !== 0){
- for(var i = 0; i < topics.length; i++){
- if(cx + 5 + 25 * i + 20 > p.width){
- cx -= 25 * i;
- cy += yGap + 5;
- }
- if(this.value === undefined){
- this.select(0);
- }
- if(this.value === i){
- p.fill(255, 204, 0);
- }else{
- p.fill(255);
- }
- p.rect(cx + 25*i, cy + yGap - 15, 20, 20);
- p.fill(0);
- p.textAlign(p.CENTER, p.CENTER);
- p.text(i+1, cx + 10 + 25*i, cy + yGap - 5);
- }
- }else{
- p.text("{}", this.x, this.y + yGap);
- }
- }
- select(value){
- this.value = value;
- }
- }*/

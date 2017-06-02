@@ -30,7 +30,7 @@ export{
   RunRecord
 };
 
-function parseRuns(id, text, poolSize) {
+function parseRuns(id, text, runSize) {
   let reSs = new RegExp("\\s+");
   let reCs = new RegExp("\n+");
   let lines = text.split(reCs);
@@ -41,7 +41,7 @@ function parseRuns(id, text, poolSize) {
     let documentId = elems[2].trim();
     var runRecord = new RunRecord(0, documentId, parseInt(elems[3]), parseFloat(elems[4]));
     if (topicId in mem) {
-      if (mem[topicId].lRunRecord.length <= poolSize) {
+      if (mem[topicId].lRunRecord.length < runSize) {
         mem[topicId].lRunRecord = mem[topicId].lRunRecord.concat(runRecord);
       }
     } else {
@@ -50,15 +50,17 @@ function parseRuns(id, text, poolSize) {
     }
   }
   // clean input
-  for(let key in mem){
+  for (let key in mem) {
     let run = mem[key];
     let lRunRecord = run.lRunRecord;
     // remove duplicates
     // TODO
     // sort
-    let slRunRecord = lRunRecord.sort(function(a, b) {return a.score - b.score;});
+    let slRunRecord = lRunRecord.sort(function (a, b) {
+      return a.score - b.score;
+    });
     // reconstruct rank
-    for(let j = 0; j < slRunRecord.length; j++){
+    for (let j = 0; j < slRunRecord.length; j++) {
       slRunRecord[j].rank = j + 1;
     }
     run.lRunRecord = slRunRecord;
@@ -68,7 +70,7 @@ function parseRuns(id, text, poolSize) {
 
 export default Ember.Component.extend({
   store: Ember.inject.service(),
-  poolSize: 1000,
+  runSize: 1000,
   actions: {
     upload: function (event) {
       for (let i = 0; i < event.target.files.length; i++) {
@@ -77,19 +79,19 @@ export default Ember.Component.extend({
         let txtData;
         reader.onload = () => {
           txtData = reader.result;
-          var runs = parseRuns(file.name, txtData, this.get("poolSize"));
+          var runs = parseRuns(file.name, txtData, this.get("runSize"));
           this.pool.addRuns(runs);
-          this.lRuns.push(runs);
+          this.lRuns.pushObject(runs);
           console.log("read " + file.name);
         };
         if (file) {
           reader.readAsText(file);
         }
       }
-      this.sendAction('updateTopicSelector');
+      this.sendAction('updateTopicSelector');//this makes the topic selector to render again in order to be updated
     },
-    poolSizeChange(value) {
-      this.set("poolSize", value);
+    runSizeChange(value) {
+      this.set("runSize", value);
     }
   }
 });
