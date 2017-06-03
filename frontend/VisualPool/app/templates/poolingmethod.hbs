@@ -1,12 +1,12 @@
 <div class="row">
   <div class="container col-md-8">
     <div class="row">
-      <div class="col-md-7">
+      <div class="col-md-9">
         {{poolstrategy-selector
           poolStrategies=pool.lPoolStrategy
           selected=poolStrategySelected}}
       </div>
-      <div class="col-md-4">
+      <div class="col-md-2">
         {{#if loading}}
         {{else}}
           {{topic-selector selectTopic="selectTopic" topics=pool.lTopicPool}}

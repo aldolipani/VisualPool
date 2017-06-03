@@ -1,16 +1,13 @@
-<div class="form-horizontal">
-    <div class="form-group">
-        <div class="col-sm-2">
-            <label class="btn btn-default btn-file">
-                Upload Runs <input multiple="true" onchange={{action "upload"}} type="file" style="display: none;"/>
-            </label>
-        </div>
-        <label class="col-sm-2 control-label">Run Size:</label>
-        <div class="col-sm-2">
-            <input {{bind-attr id="item.textboxId"}}
-                    type="text" {{bind-attr value="item.value"}}
-                    onblur={{action "runSizeChange" value="target.value"}}
-                            class="form-control" value={{runSize}}/>
-        </div>
-    </div>
+<div class="col-md-2">
+  <label class="btn btn-default btn-file">
+    <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+    Load Runs <input multiple="true" onchange={{action "upload"}} type="file" style="display: none;"/>
+  </label>
+</div>
+<div class="col-md-2 input-group">
+  <span class="input-group-addon">Run Size</span>
+  <input {{bind-attr id="item.textboxId"}}
+    type="text" {{bind-attr value="item.value"}}
+    onblur={{action "runSizeChange" value="target.value"}}
+      class="form-control" value={{runSize}}/>
 </div>

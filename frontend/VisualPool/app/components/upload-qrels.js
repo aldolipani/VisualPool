@@ -37,7 +37,11 @@ function parseQRels(id, text) {
     var elems = lines[i].trim().split(reSs);
     let topicId = elems[0].trim();
     let documentId = elems[2].trim();
-    var qRelRecord = new QRelRecord(0, documentId, parseInt(elems[3]));
+    let rel = parseInt(elems[3].trim());
+    if(rel > 1){
+      rel = 1;
+    }
+    var qRelRecord = new QRelRecord(0, documentId, rel);
     if (topicId in mem) {
       mem[topicId].mQRelRecord[qRelRecord.doc] = qRelRecord;
     } else {

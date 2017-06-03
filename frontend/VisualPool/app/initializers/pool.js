@@ -86,9 +86,9 @@ class N {
 }
 
 const EnumPooledDocumentState = {
-  UNKNOWN:-3,
-  UNSELECTED: -2,
-  SELECTED: -1,
+  UNSELECTED: -3,
+  SELECTED: -2,
+  UNKNOWN:-1,
   NON_RELEVANT: 0,
   RELEVANT: 1
 };

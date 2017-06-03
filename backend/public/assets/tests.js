@@ -15,7 +15,7 @@ define('visual-pool/tests/components/canvas-visual-pool-view-selector.jshint', [
   QUnit.module('JSHint | components/canvas-visual-pool-view-selector.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(false, 'components/canvas-visual-pool-view-selector.js should pass jshint.\ncomponents/canvas-visual-pool-view-selector.js: line 21, col 31, Expected \'===\' and instead saw \'==\'.\n\n1 error');
+    assert.ok(true, 'components/canvas-visual-pool-view-selector.js should pass jshint.');
   });
 });
 define('visual-pool/tests/components/canvas-visual-pool.jshint', ['exports'], function (exports) {

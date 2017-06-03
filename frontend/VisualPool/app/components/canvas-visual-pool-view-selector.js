@@ -18,7 +18,7 @@ export default Ember.Component.extend({
         this.set("normalView", false);
         this.set("uniqueView", true);
         this.set("poolView", false);
-      }else if(viewSelector == 2){
+      }else if(viewSelector === 2){
         this.set("normalView", false);
         this.set("uniqueView", false);
         this.set("poolView", true);

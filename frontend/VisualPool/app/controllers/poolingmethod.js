@@ -23,6 +23,7 @@ export default Ember.Controller.extend({
     },
     selectTopic(topic) {
       this.set("topicSelected", topic);
+      console.log(topic);
     },
     stepForward(){
       let strategy = this.get("poolStrategySelected");

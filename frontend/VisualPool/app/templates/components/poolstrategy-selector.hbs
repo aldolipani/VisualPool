@@ -1,18 +1,16 @@
-<div class="form-horizontal">
-    <div class="form-group">
-        <label class="col-sm-2 control-label">Strategy:</label>
-        <div class="col-sm-3">
-            <select onchange={{action "selectPoolStrategy" value="target.value"}} class="form-control">
-              {{#each poolStrategies as |strategy|}}
-                  <option>{{strategy.name}}</option>
-              {{/each}}
-            </select>
-        </div>
-      {{#each parameters as |parameter|}}
-          <label class="col-sm-1 control-label">{{parameter.name}}:</label>
-          <div class="col-sm-2">
-              {{input class="form-control" value=parameter.value}}
-          </div>
+<div class="col-md-4">
+  <div class="input-group">
+    <span class="input-group-addon" id="basic-addon-strategy">Strategy</span>
+    <select onchange={{action "selectPoolStrategy" value="target.value"}} class="form-control" aria-describedby="basic-addon-strategy">
+      {{#each poolStrategies as |strategy|}}
+        <option>{{strategy.name}}</option>
       {{/each}}
-    </div>
+    </select>
+  </div>
 </div>
+{{#each parameters as |parameter|}}
+  <div class="col-md-2 input-group">
+    <span class="input-group-addon">{{parameter.name}}</span>
+    {{input class="form-control" value=parameter.value}}
+  </div>
+{{/each}}

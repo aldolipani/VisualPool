@@ -38,6 +38,22 @@ define('visual-pool/components/bs-accordion/item', ['exports', 'ember-bootstrap/
     }
   });
 });
+define('visual-pool/components/bs-accordion/item/body', ['exports', 'ember-bootstrap/components/bs-accordion/item/body'], function (exports, _emberBootstrapComponentsBsAccordionItemBody) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberBootstrapComponentsBsAccordionItemBody['default'];
+    }
+  });
+});
+define('visual-pool/components/bs-accordion/item/title', ['exports', 'ember-bootstrap/components/bs-accordion/item/title'], function (exports, _emberBootstrapComponentsBsAccordionItemTitle) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberBootstrapComponentsBsAccordionItemTitle['default'];
+    }
+  });
+});
 define('visual-pool/components/bs-alert', ['exports', 'ember-bootstrap/components/bs-alert'], function (exports, _emberBootstrapComponentsBsAlert) {
   Object.defineProperty(exports, 'default', {
     enumerable: true,
@@ -187,6 +203,14 @@ define('visual-pool/components/bs-form/element/feedback-icon', ['exports', 'embe
     enumerable: true,
     get: function get() {
       return _emberBootstrapComponentsBsFormElementFeedbackIcon['default'];
+    }
+  });
+});
+define('visual-pool/components/bs-form/element/help-text', ['exports', 'ember-bootstrap/components/bs-form/element/help-text'], function (exports, _emberBootstrapComponentsBsFormElementHelpText) {
+  Object.defineProperty(exports, 'default', {
+    enumerable: true,
+    get: function get() {
+      return _emberBootstrapComponentsBsFormElementHelpText['default'];
     }
   });
 });
@@ -457,7 +481,7 @@ define("visual-pool/components/canvas-visual-pool-view-selector", ["exports", "e
           this.set("normalView", false);
           this.set("uniqueView", true);
           this.set("poolView", false);
-        } else if (viewSelector == 2) {
+        } else if (viewSelector === 2) {
           this.set("normalView", false);
           this.set("uniqueView", false);
           this.set("poolView", true);
@@ -568,9 +592,9 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
   })();
 
   var EnumPooledDocumentState = {
-    UNKNOWN: -3,
-    UNSELECTED: -2,
-    SELECTED: -1,
+    UNSELECTED: -3,
+    SELECTED: -2,
+    UNKNOWN: -1,
     NON_RELEVANT: 0,
     RELEVANT: 1
   };
@@ -612,11 +636,11 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
         } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.RELEVANT) {
           p.fill("#009E73");
         } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.NON_RELEVANT) {
-          p.fill("#000000");
-        } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNKNOWN) {
           p.fill("#9E002A");
+        } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNKNOWN) {
+          p.fill("#000000");
         } else {
-          p.fill("#E69F00"); // selected
+          p.fill("#AAAAAA"); // selected
         }
         p.rect(x, y, w, h);
         p.fill(255);
@@ -657,13 +681,13 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
       if (!this.sketch) {
         this.sketch = function (p) {
           var canvasContainer = _ember["default"].$('#canvasVisualPoolContainer');
-          var lRunsViewer = new LRunsViewer(0, 10, p);
+          var lRunsViewer = new LRunsViewer(0, 0, p);
           var lPooledDocument_i = 0;
 
           p.setup = function () {
-            p.createCanvas(canvasContainer.width(), 500);
+            p.createCanvas(canvasContainer.width(), canvasContainer.height());
             p.background(255);
-            p.frameRate(20);
+            p.frameRate(10);
           };
 
           var nRuns = 0;
@@ -698,7 +722,7 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
           };
 
           p.windowResized = function () {
-            p.resizeCanvas(canvasContainer.width(), 500);
+            p.resizeCanvas(canvasContainer.width(), canvasContainer.height());
           };
         };
 
@@ -1197,6 +1221,7 @@ define('visual-pool/components/presenter', ['exports', 'ember-dialog/components/
 define("visual-pool/components/topic-selector", ["exports", "ember"], function (exports, _ember) {
   exports["default"] = _ember["default"].Component.extend({
     topics: [],
+    topicSelected: "Null",
     didRender: function didRender() {
       if (this.topics.length > 0) {
         this.sendAction("selectTopic", this.topics[0].id);
@@ -1204,6 +1229,7 @@ define("visual-pool/components/topic-selector", ["exports", "ember"], function (
     },
     actions: {
       selectTopic: function selectTopic(topic) {
+        this.set("topicSelected", topic);
         this.sendAction("selectTopic", topic);
       }
     }
@@ -1247,7 +1273,11 @@ define("visual-pool/components/upload-qrels", ["exports", "ember"], function (ex
       var elems = lines[i].trim().split(reSs);
       var topicId = elems[0].trim();
       var documentId = elems[2].trim();
-      var qRelRecord = new QRelRecord(0, documentId, parseInt(elems[3]));
+      var rel = parseInt(elems[3].trim());
+      if (rel > 1) {
+        rel = 1;
+      }
+      var qRelRecord = new QRelRecord(0, documentId, rel);
       if (topicId in mem) {
         mem[topicId].mQRelRecord[qRelRecord.doc] = qRelRecord;
       } else {
@@ -1408,6 +1438,7 @@ define("visual-pool/controllers/poolingmethod", ["exports", "ember"], function (
       },
       selectTopic: function selectTopic(topic) {
         this.set("topicSelected", topic);
+        console.log(topic);
       },
       stepForward: function stepForward() {
         var _this2 = this;
@@ -1540,11 +1571,11 @@ define("visual-pool/helpers/poolstrategy-log-rel", ["exports", "ember"], functio
   function poolstrategyLogRel(params /*, hash*/) {
     var rel = params[0];
     if (rel === 0) {
-      return "danger";
+      return "non_relevant";
     } else if (rel === -1) {
-      return "";
+      return "unknown";
     } else if (rel === 1) {
-      return "success";
+      return "relevant";
     }
   }
 
@@ -1801,9 +1832,9 @@ define('visual-pool/initializers/pool', ['exports', 'ember'], function (exports,
   };
 
   var EnumPooledDocumentState = {
-    UNKNOWN: -3,
-    UNSELECTED: -2,
-    SELECTED: -1,
+    UNSELECTED: -3,
+    SELECTED: -2,
+    UNKNOWN: -1,
     NON_RELEVANT: 0,
     RELEVANT: 1
   };
@@ -2432,11 +2463,11 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 16,
+              "line": 9,
               "column": 18
             },
             "end": {
-              "line": 18,
+              "line": 11,
               "column": 18
             }
           },
@@ -2467,11 +2498,11 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 21,
+              "line": 14,
               "column": 18
             },
             "end": {
-              "line": 23,
+              "line": 16,
               "column": 18
             }
           },
@@ -2502,11 +2533,11 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 26,
+              "line": 19,
               "column": 18
             },
             "end": {
-              "line": 28,
+              "line": 21,
               "column": 18
             }
           },
@@ -2540,7 +2571,7 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 37,
+            "line": 30,
             "column": 6
           }
         },
@@ -2557,51 +2588,17 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
         var el2 = dom.createTextNode("\n    ");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "container");
+        dom.setAttribute(el2, "class", "container-fluid");
         var el3 = dom.createTextNode("\n        ");
         dom.appendChild(el2, el3);
         var el3 = dom.createElement("div");
         dom.setAttribute(el3, "class", "navbar-header");
         var el4 = dom.createTextNode("\n            ");
         dom.appendChild(el3, el4);
-        var el4 = dom.createElement("button");
-        dom.setAttribute(el4, "type", "button");
-        dom.setAttribute(el4, "class", "navbar-toggle collapsed");
-        dom.setAttribute(el4, "data-toggle", "collapse");
-        dom.setAttribute(el4, "data-target", "#navbar");
-        dom.setAttribute(el4, "aria-expanded", "false");
-        dom.setAttribute(el4, "aria-controls", "navbar");
-        var el5 = dom.createTextNode("\n                ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createElement("span");
-        dom.setAttribute(el5, "class", "sr-only");
-        var el6 = dom.createTextNode("Toggle navigation");
-        dom.appendChild(el5, el6);
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n                ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createElement("span");
-        dom.setAttribute(el5, "class", "icon-bar");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n                ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createElement("span");
-        dom.setAttribute(el5, "class", "icon-bar");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n                ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createElement("span");
-        dom.setAttribute(el5, "class", "icon-bar");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n            ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n            ");
-        dom.appendChild(el3, el4);
         var el4 = dom.createElement("a");
-        dom.setAttribute(el4, "class", "navbar-brand");
         dom.setAttribute(el4, "href", "#");
-        var el5 = dom.createTextNode("Visual Pooling");
+        dom.setAttribute(el4, "class", "navbar-brand");
+        var el5 = dom.createTextNode("Visual Pool");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n        ");
@@ -2682,7 +2679,7 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
         morphs[3] = dom.createMorphAt(dom.childAt(fragment, [2]), 1, 1);
         return morphs;
       },
-      statements: [["block", "link-to", ["index"], [], 0, null, ["loc", [null, [16, 18], [18, 30]]]], ["block", "link-to", ["about"], [], 1, null, ["loc", [null, [21, 18], [23, 30]]]], ["block", "link-to", ["contact"], [], 2, null, ["loc", [null, [26, 18], [28, 30]]]], ["content", "outlet", ["loc", [null, [36, 2], [36, 12]]], 0, 0, 0, 0]],
+      statements: [["block", "link-to", ["index"], [], 0, null, ["loc", [null, [9, 18], [11, 30]]]], ["block", "link-to", ["about"], [], 1, null, ["loc", [null, [14, 18], [16, 30]]]], ["block", "link-to", ["contact"], [], 2, null, ["loc", [null, [19, 18], [21, 30]]]], ["content", "outlet", ["loc", [null, [29, 2], [29, 12]]], 0, 0, 0, 0]],
       locals: [],
       templates: [child0, child1, child2]
     };
@@ -2697,12 +2694,12 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
           "loc": {
             "source": null,
             "start": {
-              "line": 3,
-              "column": 4
+              "line": 2,
+              "column": 2
             },
             "end": {
-              "line": 5,
-              "column": 4
+              "line": 4,
+              "column": 2
             }
           },
           "moduleName": "visual-pool/templates/components/canvas-visual-pool-view-selector.hbs"
@@ -2713,7 +2710,7 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("      ");
+          var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("span");
           dom.setAttribute(el1, "class", "glyphicon glyphicon-align-justify");
@@ -2739,12 +2736,12 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
             "loc": {
               "source": null,
               "start": {
-                "line": 5,
-                "column": 4
+                "line": 4,
+                "column": 2
               },
               "end": {
-                "line": 7,
-                "column": 4
+                "line": 6,
+                "column": 2
               }
             },
             "moduleName": "visual-pool/templates/components/canvas-visual-pool-view-selector.hbs"
@@ -2755,7 +2752,7 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
           hasRendered: false,
           buildFragment: function buildFragment(dom) {
             var el0 = dom.createDocumentFragment();
-            var el1 = dom.createTextNode("      ");
+            var el1 = dom.createTextNode("    ");
             dom.appendChild(el0, el1);
             var el1 = dom.createElement("span");
             dom.setAttribute(el1, "class", "glyphicon glyphicon-align-left");
@@ -2781,12 +2778,12 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
               "loc": {
                 "source": null,
                 "start": {
-                  "line": 7,
-                  "column": 4
+                  "line": 6,
+                  "column": 2
                 },
                 "end": {
-                  "line": 9,
-                  "column": 4
+                  "line": 8,
+                  "column": 2
                 }
               },
               "moduleName": "visual-pool/templates/components/canvas-visual-pool-view-selector.hbs"
@@ -2797,13 +2794,13 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
             hasRendered: false,
             buildFragment: function buildFragment(dom) {
               var el0 = dom.createDocumentFragment();
-              var el1 = dom.createTextNode("      ");
+              var el1 = dom.createTextNode("    ");
               dom.appendChild(el0, el1);
               var el1 = dom.createElement("span");
               dom.setAttribute(el1, "class", "glyphicon glyphicon-indent-right");
               dom.setAttribute(el1, "aria-hidden", "true");
               dom.appendChild(el0, el1);
-              var el1 = dom.createTextNode("\n    ");
+              var el1 = dom.createTextNode("\n  ");
               dom.appendChild(el0, el1);
               return el0;
             },
@@ -2821,12 +2818,12 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
             "loc": {
               "source": null,
               "start": {
-                "line": 7,
-                "column": 4
+                "line": 6,
+                "column": 2
               },
               "end": {
-                "line": 9,
-                "column": 4
+                "line": 8,
+                "column": 2
               }
             },
             "moduleName": "visual-pool/templates/components/canvas-visual-pool-view-selector.hbs"
@@ -2848,7 +2845,7 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
             dom.insertBoundary(fragment, null);
             return morphs;
           },
-          statements: [["block", "if", [["get", "poolView", ["loc", [null, [7, 14], [7, 22]]], 0, 0, 0, 0]], [], 0, null, ["loc", [null, [7, 4], [9, 4]]]]],
+          statements: [["block", "if", [["get", "poolView", ["loc", [null, [6, 12], [6, 20]]], 0, 0, 0, 0]], [], 0, null, ["loc", [null, [6, 2], [8, 2]]]]],
           locals: [],
           templates: [child0]
         };
@@ -2859,12 +2856,12 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
           "loc": {
             "source": null,
             "start": {
-              "line": 5,
-              "column": 4
+              "line": 4,
+              "column": 2
             },
             "end": {
-              "line": 9,
-              "column": 4
+              "line": 8,
+              "column": 2
             }
           },
           "moduleName": "visual-pool/templates/components/canvas-visual-pool-view-selector.hbs"
@@ -2886,7 +2883,7 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
           dom.insertBoundary(fragment, null);
           return morphs;
         },
-        statements: [["block", "if", [["get", "uniqueView", ["loc", [null, [5, 14], [5, 24]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [5, 4], [9, 4]]]]],
+        statements: [["block", "if", [["get", "uniqueView", ["loc", [null, [4, 12], [4, 22]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [4, 2], [8, 2]]]]],
         locals: [],
         templates: [child0, child1]
       };
@@ -2901,8 +2898,8 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
             "column": 0
           },
           "end": {
-            "line": 11,
-            "column": 6
+            "line": 9,
+            "column": 9
           }
         },
         "moduleName": "visual-pool/templates/components/canvas-visual-pool-view-selector.hbs"
@@ -2913,36 +2910,25 @@ define("visual-pool/templates/components/canvas-visual-pool-view-selector", ["ex
       hasRendered: false,
       buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
-        var el1 = dom.createElement("div");
-        dom.setAttribute(el1, "class", "btn-group btn-group-justified");
-        dom.setAttribute(el1, "role", "group");
-        dom.setAttribute(el1, "aria-label", "Justified button group");
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("a");
-        dom.setAttribute(el2, "href", "#");
-        dom.setAttribute(el2, "class", "btn btn-default");
-        dom.setAttribute(el2, "role", "button");
-        var el3 = dom.createTextNode("\n");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
+        var el1 = dom.createElement("button");
+        dom.setAttribute(el1, "type", "button");
+        dom.setAttribute(el1, "class", "btn btn-default pull-right");
+        dom.setAttribute(el1, "style", "margin-bottom:4px;white-space: normal;");
         var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createComment("");
         dom.appendChild(el1, el2);
         dom.appendChild(el0, el1);
         return el0;
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [0, 1]);
+        var element0 = dom.childAt(fragment, [0]);
         var morphs = new Array(2);
         morphs[0] = dom.createElementMorph(element0);
         morphs[1] = dom.createMorphAt(element0, 1, 1);
         return morphs;
       },
-      statements: [["element", "action", ["changeView"], [], ["loc", [null, [2, 52], [2, 75]]], 0, 0], ["block", "if", [["get", "normalView", ["loc", [null, [3, 10], [3, 20]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [3, 4], [9, 11]]]]],
+      statements: [["element", "action", ["changeView"], [], ["loc", [null, [1, 104], [1, 127]]], 0, 0], ["block", "if", [["get", "normalView", ["loc", [null, [2, 8], [2, 18]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [2, 2], [8, 9]]]]],
       locals: [],
       templates: [child0, child1]
     };
@@ -2961,7 +2947,7 @@ define("visual-pool/templates/components/canvas-visual-pool", ["exports"], funct
           },
           "end": {
             "line": 1,
-            "column": 42
+            "column": 125
           }
         },
         "moduleName": "visual-pool/templates/components/canvas-visual-pool.hbs"
@@ -2974,6 +2960,7 @@ define("visual-pool/templates/components/canvas-visual-pool", ["exports"], funct
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
         dom.setAttribute(el1, "id", "canvasVisualPoolContainer");
+        dom.setAttribute(el1, "style", "height:calc(100vh - 196px);max-height:calc(100vh - 196px);padding-left:5px");
         dom.appendChild(el0, el1);
         return el0;
       },
@@ -3079,10 +3066,12 @@ define("visual-pool/templates/components/poolstrategy-log", ["exports"], functio
           var el2 = dom.createTextNode("\n              ");
           dom.appendChild(el1, el2);
           var el2 = dom.createElement("td");
+          dom.setAttribute(el2, "class", "text-right");
           var el3 = dom.createComment("");
           dom.appendChild(el2, el3);
-          var el3 = dom.createTextNode(":");
-          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          dom.setAttribute(el2, "class", "text-left");
           var el3 = dom.createComment("");
           dom.appendChild(el2, el3);
           dom.appendChild(el1, el2);
@@ -3095,14 +3084,13 @@ define("visual-pool/templates/components/poolstrategy-log", ["exports"], functio
         },
         buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var element1 = dom.childAt(element0, [1]);
           var morphs = new Array(3);
           morphs[0] = dom.createAttrMorph(element0, 'class');
-          morphs[1] = dom.createMorphAt(element1, 0, 0);
-          morphs[2] = dom.createMorphAt(element1, 2, 2);
+          morphs[1] = dom.createMorphAt(dom.childAt(element0, [1]), 0, 0);
+          morphs[2] = dom.createMorphAt(dom.childAt(element0, [2]), 0, 0);
           return morphs;
         },
-        statements: [["attribute", "class", ["concat", [["subexpr", "poolstrategy-log-rel", [["get", "pooledDocument.rel", ["loc", [null, [8, 46], [8, 64]]], 0, 0, 0, 0]], [], ["loc", [null, [8, 23], [8, 66]]], 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0], ["content", "pooledDocument.topic", ["loc", [null, [9, 18], [9, 42]]], 0, 0, 0, 0], ["content", "pooledDocument.document", ["loc", [null, [9, 43], [9, 70]]], 0, 0, 0, 0]],
+        statements: [["attribute", "class", ["concat", [["subexpr", "poolstrategy-log-rel", [["get", "pooledDocument.rel", ["loc", [null, [8, 46], [8, 64]]], 0, 0, 0, 0]], [], ["loc", [null, [8, 23], [8, 66]]], 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0], ["content", "pooledDocument.topic", ["loc", [null, [9, 37], [9, 61]]], 0, 0, 0, 0], ["content", "pooledDocument.document", ["loc", [null, [9, 88], [9, 115]]], 0, 0, 0, 0]],
         locals: ["pooledDocument"],
         templates: []
       };
@@ -3288,12 +3276,12 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
           "loc": {
             "source": null,
             "start": {
-              "line": 6,
-              "column": 14
+              "line": 5,
+              "column": 6
             },
             "end": {
-              "line": 8,
-              "column": 14
+              "line": 7,
+              "column": 6
             }
           },
           "moduleName": "visual-pool/templates/components/poolstrategy-selector.hbs"
@@ -3304,7 +3292,7 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("                  ");
+          var el1 = dom.createTextNode("        ");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("option");
           var el2 = dom.createComment("");
@@ -3319,7 +3307,7 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
           morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]), 0, 0);
           return morphs;
         },
-        statements: [["content", "strategy.name", ["loc", [null, [7, 26], [7, 43]]], 0, 0, 0, 0]],
+        statements: [["content", "strategy.name", ["loc", [null, [6, 16], [6, 33]]], 0, 0, 0, 0]],
         locals: ["strategy"],
         templates: []
       };
@@ -3332,11 +3320,11 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
             "source": null,
             "start": {
               "line": 11,
-              "column": 6
+              "column": 0
             },
             "end": {
               "line": 16,
-              "column": 6
+              "column": 0
             }
           },
           "moduleName": "visual-pool/templates/components/poolstrategy-selector.hbs"
@@ -3347,24 +3335,22 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("          ");
-          dom.appendChild(el0, el1);
-          var el1 = dom.createElement("label");
-          dom.setAttribute(el1, "class", "col-sm-1 control-label");
-          var el2 = dom.createComment("");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode(":");
-          dom.appendChild(el1, el2);
-          dom.appendChild(el0, el1);
-          var el1 = dom.createTextNode("\n          ");
+          var el1 = dom.createTextNode("  ");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("div");
-          dom.setAttribute(el1, "class", "col-sm-2");
-          var el2 = dom.createTextNode("\n              ");
+          dom.setAttribute(el1, "class", "col-md-2 input-group");
+          var el2 = dom.createTextNode("\n    ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("span");
+          dom.setAttribute(el2, "class", "input-group-addon");
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n    ");
           dom.appendChild(el1, el2);
           var el2 = dom.createComment("");
           dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
+          var el2 = dom.createTextNode("\n  ");
           dom.appendChild(el1, el2);
           dom.appendChild(el0, el1);
           var el1 = dom.createTextNode("\n");
@@ -3372,12 +3358,13 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
           return el0;
         },
         buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var element0 = dom.childAt(fragment, [1]);
           var morphs = new Array(2);
-          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]), 0, 0);
-          morphs[1] = dom.createMorphAt(dom.childAt(fragment, [3]), 1, 1);
+          morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]), 0, 0);
+          morphs[1] = dom.createMorphAt(element0, 3, 3);
           return morphs;
         },
-        statements: [["content", "parameter.name", ["loc", [null, [12, 48], [12, 66]]], 0, 0, 0, 0], ["inline", "input", [], ["class", "form-control", "value", ["subexpr", "@mut", [["get", "parameter.value", ["loc", [null, [14, 49], [14, 64]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [14, 14], [14, 66]]], 0, 0]],
+        statements: [["content", "parameter.name", ["loc", [null, [13, 36], [13, 54]]], 0, 0, 0, 0], ["inline", "input", [], ["class", "form-control", "value", ["subexpr", "@mut", [["get", "parameter.value", ["loc", [null, [14, 39], [14, 54]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [14, 4], [14, 56]]], 0, 0]],
         locals: ["parameter"],
         templates: []
       };
@@ -3392,8 +3379,8 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
             "column": 0
           },
           "end": {
-            "line": 19,
-            "column": 0
+            "line": 16,
+            "column": 9
           }
         },
         "moduleName": "visual-pool/templates/components/poolstrategy-selector.hbs"
@@ -3405,41 +3392,32 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
       buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
-        dom.setAttribute(el1, "class", "form-horizontal");
-        var el2 = dom.createTextNode("\n    ");
+        dom.setAttribute(el1, "class", "col-md-4");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "form-group");
-        var el3 = dom.createTextNode("\n        ");
+        dom.setAttribute(el2, "class", "input-group");
+        var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("label");
-        dom.setAttribute(el3, "class", "col-sm-2 control-label");
-        var el4 = dom.createTextNode("Strategy:");
+        var el3 = dom.createElement("span");
+        dom.setAttribute(el3, "class", "input-group-addon");
+        dom.setAttribute(el3, "id", "basic-addon-strategy");
+        var el4 = dom.createTextNode("Strategy");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n        ");
+        var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "col-sm-3");
-        var el4 = dom.createTextNode("\n            ");
+        var el3 = dom.createElement("select");
+        dom.setAttribute(el3, "class", "form-control");
+        dom.setAttribute(el3, "aria-describedby", "basic-addon-strategy");
+        var el4 = dom.createTextNode("\n");
         dom.appendChild(el3, el4);
-        var el4 = dom.createElement("select");
-        dom.setAttribute(el4, "class", "form-control");
-        var el5 = dom.createTextNode("\n");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("            ");
-        dom.appendChild(el4, el5);
+        var el4 = dom.createComment("");
         dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
+        var el4 = dom.createTextNode("    ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("    ");
+        var el3 = dom.createTextNode("\n  ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
@@ -3447,18 +3425,20 @@ define("visual-pool/templates/components/poolstrategy-selector", ["exports"], fu
         dom.appendChild(el0, el1);
         var el1 = dom.createTextNode("\n");
         dom.appendChild(el0, el1);
+        var el1 = dom.createComment("");
+        dom.appendChild(el0, el1);
         return el0;
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [0, 1]);
-        var element1 = dom.childAt(element0, [3, 1]);
+        var element1 = dom.childAt(fragment, [0, 1, 3]);
         var morphs = new Array(3);
         morphs[0] = dom.createAttrMorph(element1, 'onchange');
         morphs[1] = dom.createMorphAt(element1, 1, 1);
-        morphs[2] = dom.createMorphAt(element0, 5, 5);
+        morphs[2] = dom.createMorphAt(fragment, 2, 2, contextualElement);
+        dom.insertBoundary(fragment, null);
         return morphs;
       },
-      statements: [["attribute", "onchange", ["subexpr", "action", ["selectPoolStrategy"], ["value", "target.value"], ["loc", [null, [null, null], [5, 81]]], 0, 0], 0, 0, 0, 0], ["block", "each", [["get", "poolStrategies", ["loc", [null, [6, 22], [6, 36]]], 0, 0, 0, 0]], [], 0, null, ["loc", [null, [6, 14], [8, 23]]]], ["block", "each", [["get", "parameters", ["loc", [null, [11, 14], [11, 24]]], 0, 0, 0, 0]], [], 1, null, ["loc", [null, [11, 6], [16, 15]]]]],
+      statements: [["attribute", "onchange", ["subexpr", "action", ["selectPoolStrategy"], ["value", "target.value"], ["loc", [null, [null, null], [4, 73]]], 0, 0], 0, 0, 0, 0], ["block", "each", [["get", "poolStrategies", ["loc", [null, [5, 14], [5, 28]]], 0, 0, 0, 0]], [], 0, null, ["loc", [null, [5, 6], [7, 15]]]], ["block", "each", [["get", "parameters", ["loc", [null, [11, 8], [11, 18]]], 0, 0, 0, 0]], [], 1, null, ["loc", [null, [11, 0], [16, 9]]]]],
       locals: [],
       templates: [child0, child1]
     };
@@ -3508,7 +3488,7 @@ define("visual-pool/templates/components/poolstrategy-stats", ["exports"], funct
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
         dom.setAttribute(el2, "class", "panel-body");
-        dom.setAttribute(el2, "style", "height:calc(100vh - 198px);max-height:calc(100vh - 200px);overflow-y:scroll;");
+        dom.setAttribute(el2, "style", "height:calc(100vh - 199px);max-height:calc(100vh - 198px);overflow-y:scroll;");
         var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
         var el3 = dom.createElement("p");
@@ -3644,12 +3624,12 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
           "loc": {
             "source": null,
             "start": {
-              "line": 7,
-              "column": 14
+              "line": 5,
+              "column": 4
             },
             "end": {
-              "line": 9,
-              "column": 14
+              "line": 7,
+              "column": 4
             }
           },
           "moduleName": "visual-pool/templates/components/topic-selector.hbs"
@@ -3660,7 +3640,7 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("                  ");
+          var el1 = dom.createTextNode("      ");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("option");
           var el2 = dom.createComment("");
@@ -3675,7 +3655,7 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
           morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]), 0, 0);
           return morphs;
         },
-        statements: [["content", "topic.id", ["loc", [null, [8, 26], [8, 38]]], 0, 0, 0, 0]],
+        statements: [["content", "topic.id", ["loc", [null, [6, 14], [6, 26]]], 0, 0, 0, 0]],
         locals: ["topic"],
         templates: []
       };
@@ -3687,12 +3667,12 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
           "loc": {
             "source": null,
             "start": {
-              "line": 9,
-              "column": 14
+              "line": 7,
+              "column": 4
             },
             "end": {
-              "line": 11,
-              "column": 14
+              "line": 9,
+              "column": 4
             }
           },
           "moduleName": "visual-pool/templates/components/topic-selector.hbs"
@@ -3703,7 +3683,7 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("                  ");
+          var el1 = dom.createTextNode("      ");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("option");
           var el2 = dom.createTextNode("Null");
@@ -3731,8 +3711,8 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
             "column": 0
           },
           "end": {
-            "line": 15,
-            "column": 7
+            "line": 11,
+            "column": 6
           }
         },
         "moduleName": "visual-pool/templates/components/topic-selector.hbs"
@@ -3743,38 +3723,26 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
       hasRendered: false,
       buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
-        var el1 = dom.createElement("form");
-        dom.setAttribute(el1, "class", "form-horizontal");
-        var el2 = dom.createTextNode("\n    ");
+        var el1 = dom.createElement("div");
+        dom.setAttribute(el1, "class", "input-group pull-right");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "form-group");
-        var el3 = dom.createTextNode("\n        ");
+        var el2 = dom.createElement("span");
+        dom.setAttribute(el2, "class", "input-group-addon");
+        dom.setAttribute(el2, "id", "basic-addon-topic");
+        var el3 = dom.createTextNode("Topic");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("label");
-        dom.setAttribute(el3, "class", "col-sm-6 control-label");
-        var el4 = dom.createTextNode("Topic:");
-        dom.appendChild(el3, el4);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("select");
+        dom.setAttribute(el2, "class", "form-control");
+        dom.setAttribute(el2, "aria-describedby", "basic-addon-topic");
+        var el3 = dom.createTextNode("\n");
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n        ");
+        var el3 = dom.createComment("");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "col-sm-6");
-        var el4 = dom.createTextNode("\n            ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("select");
-        dom.setAttribute(el4, "class", "form-control");
-        var el5 = dom.createTextNode("\n");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("            ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
+        var el3 = dom.createTextNode("  ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
@@ -3783,14 +3751,14 @@ define("visual-pool/templates/components/topic-selector", ["exports"], function 
         return el0;
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [0, 1, 3, 1]);
+        var element0 = dom.childAt(fragment, [0, 3]);
         var morphs = new Array(3);
         morphs[0] = dom.createAttrMorph(element0, 'onchange');
         morphs[1] = dom.createAttrMorph(element0, 'disabled');
         morphs[2] = dom.createMorphAt(element0, 1, 1);
         return morphs;
       },
-      statements: [["attribute", "onchange", ["subexpr", "action", ["selectTopic"], ["value", "target.value"], ["loc", [null, [null, null], [5, 74]]], 0, 0], 0, 0, 0, 0], ["attribute", "disabled", ["concat", [["subexpr", "if", [["get", "noTopics", ["loc", [null, [6, 35], [6, 43]]], 0, 0, 0, 0], "disabled"], [], ["loc", [null, [6, 30], [6, 56]]], 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0], ["block", "each", [["get", "topics", ["loc", [null, [7, 22], [7, 28]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [7, 14], [11, 23]]]]],
+      statements: [["attribute", "onchange", ["subexpr", "action", ["selectTopic"], ["value", "target.value"], ["loc", [null, [null, null], [3, 64]]], 0, 0], 0, 0, 0, 0], ["attribute", "disabled", ["concat", [["subexpr", "if", [["get", "noTopics", ["loc", [null, [4, 25], [4, 33]]], 0, 0, 0, 0], "disabled"], [], ["loc", [null, [4, 20], [4, 46]]], 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0], ["block", "each", [["get", "topics", ["loc", [null, [5, 12], [5, 18]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [5, 4], [9, 13]]]]],
       locals: [],
       templates: [child0, child1]
     };
@@ -3831,7 +3799,7 @@ define("visual-pool/templates/components/upload-qrels", ["exports"], function (e
         var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
         var el3 = dom.createElement("span");
-        dom.setAttribute(el3, "class", "glyphicon glyphicon-cloud-upload");
+        dom.setAttribute(el3, "class", "glyphicon glyphicon-upload");
         dom.setAttribute(el3, "aria-hidden", "true");
         dom.appendChild(el2, el3);
         var el3 = dom.createTextNode(" Load QRels  ");
@@ -3857,7 +3825,7 @@ define("visual-pool/templates/components/upload-qrels", ["exports"], function (e
         morphs[0] = dom.createAttrMorph(element0, 'onchange');
         return morphs;
       },
-      statements: [["attribute", "onchange", ["subexpr", "action", ["upload"], [], ["loc", [null, [null, null], [3, 141]]], 0, 0], 0, 0, 0, 0]],
+      statements: [["attribute", "onchange", ["subexpr", "action", ["upload"], [], ["loc", [null, [null, null], [3, 135]]], 0, 0], 0, 0, 0, 0]],
       locals: [],
       templates: []
     };
@@ -3875,7 +3843,7 @@ define("visual-pool/templates/components/upload-runs", ["exports"], function (ex
             "column": 0
           },
           "end": {
-            "line": 16,
+            "line": 13,
             "column": 6
           }
         },
@@ -3888,54 +3856,46 @@ define("visual-pool/templates/components/upload-runs", ["exports"], function (ex
       buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
-        dom.setAttribute(el1, "class", "form-horizontal");
-        var el2 = dom.createTextNode("\n    ");
+        dom.setAttribute(el1, "class", "col-md-2");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "form-group");
-        var el3 = dom.createTextNode("\n        ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "col-sm-2");
-        var el4 = dom.createTextNode("\n            ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("label");
-        dom.setAttribute(el4, "class", "btn btn-default btn-file");
-        var el5 = dom.createTextNode("\n                Upload Runs ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createElement("input");
-        dom.setAttribute(el5, "multiple", "true");
-        dom.setAttribute(el5, "type", "file");
-        dom.setAttribute(el5, "style", "display: none;");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n            ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n        ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("label");
-        dom.setAttribute(el3, "class", "col-sm-2 control-label");
-        var el4 = dom.createTextNode("Run Size:");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n        ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "col-sm-2");
-        var el4 = dom.createTextNode("\n            ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("input");
-        dom.setAttribute(el4, "type", "text");
-        dom.setAttribute(el4, "class", "form-control");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
+        var el2 = dom.createElement("label");
+        dom.setAttribute(el2, "class", "btn btn-default btn-file");
         var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
+        var el3 = dom.createElement("span");
+        dom.setAttribute(el3, "class", "glyphicon glyphicon-upload");
+        dom.setAttribute(el3, "aria-hidden", "true");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    Load Runs ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("input");
+        dom.setAttribute(el3, "multiple", "true");
+        dom.setAttribute(el3, "type", "file");
+        dom.setAttribute(el3, "style", "display: none;");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        dom.appendChild(el0, el1);
+        var el1 = dom.createTextNode("\n");
+        dom.appendChild(el0, el1);
+        var el1 = dom.createElement("div");
+        dom.setAttribute(el1, "class", "col-md-2 input-group");
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("span");
+        dom.setAttribute(el2, "class", "input-group-addon");
+        var el3 = dom.createTextNode("Run Size");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("input");
+        dom.setAttribute(el2, "type", "text");
+        dom.setAttribute(el2, "class", "form-control");
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
         dom.appendChild(el1, el2);
@@ -3943,18 +3903,17 @@ define("visual-pool/templates/components/upload-runs", ["exports"], function (ex
         return el0;
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [0, 1]);
-        var element1 = dom.childAt(element0, [1, 1, 1]);
-        var element2 = dom.childAt(element0, [5, 1]);
+        var element0 = dom.childAt(fragment, [0, 1, 3]);
+        var element1 = dom.childAt(fragment, [2, 3]);
         var morphs = new Array(5);
-        morphs[0] = dom.createAttrMorph(element1, 'onchange');
-        morphs[1] = dom.createAttrMorph(element2, 'onblur');
-        morphs[2] = dom.createAttrMorph(element2, 'value');
-        morphs[3] = dom.createElementMorph(element2);
-        morphs[4] = dom.createElementMorph(element2);
+        morphs[0] = dom.createAttrMorph(element0, 'onchange');
+        morphs[1] = dom.createAttrMorph(element1, 'onblur');
+        morphs[2] = dom.createAttrMorph(element1, 'value');
+        morphs[3] = dom.createElementMorph(element1);
+        morphs[4] = dom.createElementMorph(element1);
         return morphs;
       },
-      statements: [["attribute", "onchange", ["subexpr", "action", ["upload"], [], ["loc", [null, [null, null], [5, 79]]], 0, 0], 0, 0, 0, 0], ["attribute", "onblur", ["subexpr", "action", ["runSizeChange"], ["value", "target.value"], ["loc", [null, [null, null], [12, 74]]], 0, 0], 0, 0, 0, 0], ["attribute", "value", ["get", "runSize", ["loc", [null, [13, 57], [13, 64]]], 0, 0, 0, 0], 0, 0, 0, 0], ["element", "bind-attr", [], ["id", "item.textboxId"], ["loc", [null, [10, 19], [10, 52]]], 0, 0], ["element", "bind-attr", [], ["value", "item.value"], ["loc", [null, [11, 32], [11, 64]]], 0, 0]],
+      statements: [["attribute", "onchange", ["subexpr", "action", ["upload"], [], ["loc", [null, [null, null], [4, 65]]], 0, 0], 0, 0, 0, 0], ["attribute", "onblur", ["subexpr", "action", ["runSizeChange"], ["value", "target.value"], ["loc", [null, [null, null], [11, 58]]], 0, 0], 0, 0, 0, 0], ["attribute", "value", ["get", "runSize", ["loc", [null, [12, 35], [12, 42]]], 0, 0, 0, 0], 0, 0, 0, 0], ["element", "bind-attr", [], ["id", "item.textboxId"], ["loc", [null, [9, 9], [9, 42]]], 0, 0], ["element", "bind-attr", [], ["value", "item.value"], ["loc", [null, [10, 16], [10, 48]]], 0, 0]],
       locals: [],
       templates: []
     };
@@ -4761,7 +4720,7 @@ define("visual-pool/templates/poolingmethod", ["exports"], function (exports) {
         var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-7");
+        dom.setAttribute(el4, "class", "col-md-9");
         var el5 = dom.createTextNode("\n        ");
         dom.appendChild(el4, el5);
         var el5 = dom.createComment("");
@@ -4772,7 +4731,7 @@ define("visual-pool/templates/poolingmethod", ["exports"], function (exports) {
         var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-4");
+        dom.setAttribute(el4, "class", "col-md-2");
         var el5 = dom.createTextNode("\n");
         dom.appendChild(el4, el5);
         var el5 = dom.createComment("");
@@ -4984,7 +4943,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+f39cbaa3"});
+  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+8d754481"});
 }
 
 /* jshint ignore:end */

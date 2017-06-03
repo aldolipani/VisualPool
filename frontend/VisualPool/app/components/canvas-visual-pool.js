@@ -86,9 +86,9 @@ class LRunsViewer {
 }
 
 const EnumPooledDocumentState = {
-  UNKNOWN: -3,
-  UNSELECTED: -2,
-  SELECTED: -1,
+  UNSELECTED: -3,
+  SELECTED: -2,
+  UNKNOWN: -1,
   NON_RELEVANT: 0,
   RELEVANT: 1
 };
@@ -125,11 +125,11 @@ class RunsViewer {
     } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.RELEVANT) {
       p.fill("#009E73");
     } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.NON_RELEVANT) {
-      p.fill("#000000");
-    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNKNOWN) {
       p.fill("#9E002A");
+    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNKNOWN) {
+      p.fill("#000000");
     } else {
-      p.fill("#E69F00"); // selected
+      p.fill("#AAAAAA"); // selected
     }
     p.rect(x, y, w, h);
     p.fill(255);
@@ -165,13 +165,13 @@ export default Ember.Component.extend({
     if (!this.sketch) {
       this.sketch = function (p) {
         var canvasContainer = Ember.$('#canvasVisualPoolContainer');
-        var lRunsViewer = new LRunsViewer(0, 10, p);
+        var lRunsViewer = new LRunsViewer(0, 0, p);
         var lPooledDocument_i = 0;
 
         p.setup = function () {
-          p.createCanvas(canvasContainer.width(), 500);
+          p.createCanvas(canvasContainer.width(), canvasContainer.height());
           p.background(255);
-          p.frameRate(20);
+          p.frameRate(10);
         };
 
         var nRuns = 0;
@@ -206,7 +206,7 @@ export default Ember.Component.extend({
         };
 
         p.windowResized = function () {
-          p.resizeCanvas(canvasContainer.width(), 500);
+          p.resizeCanvas(canvasContainer.width(), canvasContainer.height());
         };
       };
 

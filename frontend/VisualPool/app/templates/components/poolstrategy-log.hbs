@@ -6,7 +6,7 @@
           <tbody>
           {{#each reverse as |pooledDocument|}}
             <tr class="{{poolstrategy-log-rel pooledDocument.rel}}">
-              <td>{{pooledDocument.topic}}:{{pooledDocument.document}}</td>
+              <td class="text-right">{{pooledDocument.topic}}</td><td class="text-left">{{pooledDocument.document}}</td>
             </tr>
           {{/each}}
           </tbody>

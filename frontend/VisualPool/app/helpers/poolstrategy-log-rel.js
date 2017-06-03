@@ -3,11 +3,11 @@ import Ember from 'ember';
 export function poolstrategyLogRel(params/*, hash*/) {
   var rel = params[0];
   if (rel === 0) {
-    return "danger";
+    return "non_relevant";
   } else if (rel === -1) {
-    return "";
+    return "unknown";
   } else if (rel === 1) {
-    return "success";
+    return "relevant";
   }
 }
 
