@@ -16,4 +16,8 @@
 /frontend/VisualPool/npm-debug.log*
 /frontend/VisualPool/testem.log
 
+#
+/backend/project/target/config-classes/*
+/backend/target/*
+
 .DS_Store
