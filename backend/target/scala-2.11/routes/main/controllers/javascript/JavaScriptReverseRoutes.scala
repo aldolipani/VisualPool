@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:/Users/aldo/Projects/GitHub/VisualPool/backend/conf/routes
-// @DATE:Wed May 10 16:44:14 EDT 2017
+// @DATE:Tue Jun 13 17:03:50 EDT 2017
 
 import play.api.routing.JavaScriptReverseRoute
 import play.api.mvc.{ QueryStringBindable, PathBindable, Call, JavascriptLiteral }
@@ -27,14 +27,18 @@ package controllers.javascript {
       "controllers.HomeController.index",
       """
         function() {
-          return _wA({method:"GET", url:"""" + _prefix + """"})
+        
+          if (true) {
+            return _wA({method:"GET", url:"""" + _prefix + """"})
+          }
+        
         }
       """
     )
   
   }
 
-  // @LINE:6
+  // @LINE:5
   class ReverseAssets(_prefix: => String) {
 
     def _defaultPrefix: String = {
@@ -42,12 +46,20 @@ package controllers.javascript {
     }
 
   
-    // @LINE:6
+    // @LINE:5
     def at: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.Assets.at",
       """
-        function(file1) {
-          return _wA({method:"GET", url:"""" + _prefix + { _defaultPrefix } + """" + "assets/" + (""" + implicitly[PathBindable[String]].javascriptUnbind + """)("file", file1)})
+        function(path0,file1) {
+        
+          if (path0 == """ + implicitly[JavascriptLiteral[String]].to("/public/assets") + """) {
+            return _wA({method:"GET", url:"""" + _prefix + { _defaultPrefix } + """" + "assets/" + (""" + implicitly[PathBindable[String]].javascriptUnbind + """)("file", file1)})
+          }
+        
+          if (path0 == """ + implicitly[JavascriptLiteral[String]].to("/public/fonts") + """) {
+            return _wA({method:"GET", url:"""" + _prefix + { _defaultPrefix } + """" + "fonts/" + (""" + implicitly[PathBindable[String]].javascriptUnbind + """)("file", file1)})
+          }
+        
         }
       """
     )

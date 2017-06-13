@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:/Users/aldo/Projects/GitHub/VisualPool/backend/conf/routes
-// @DATE:Wed May 10 16:44:14 EDT 2017
+// @DATE:Tue Jun 13 17:03:50 EDT 2017
 
 import play.api.mvc.{ QueryStringBindable, PathBindable, Call, JavascriptLiteral }
 import play.core.routing.{ HandlerDef, ReverseRouteContext, queryString, dynamicString }
@@ -21,23 +21,44 @@ package controllers {
   
     // @LINE:1
     def index(): Call = {
-      import ReverseRouteContext.empty
-      Call("GET", _prefix)
+    
+      () match {
+      
+        // @LINE:1
+        case ()  =>
+          import ReverseRouteContext.empty
+          Call("GET", _prefix)
+      
+      }
+    
     }
   
   }
 
-  // @LINE:6
+  // @LINE:5
   class ReverseAssets(_prefix: => String) {
     def _defaultPrefix: String = {
       if (_prefix.endsWith("/")) "" else "/"
     }
 
   
-    // @LINE:6
-    def at(file:String): Call = {
-      implicit val _rrc = new ReverseRouteContext(Map(("path", "/public/assets")))
-      Call("GET", _prefix + { _defaultPrefix } + "assets/" + implicitly[PathBindable[String]].unbind("file", file))
+    // @LINE:5
+    def at(path:String, file:String): Call = {
+    
+      (path: @unchecked, file: @unchecked) match {
+      
+        // @LINE:5
+        case (path, file) if path == "/public/assets" =>
+          implicit val _rrc = new ReverseRouteContext(Map(("path", "/public/assets")))
+          Call("GET", _prefix + { _defaultPrefix } + "assets/" + implicitly[PathBindable[String]].unbind("file", file))
+      
+        // @LINE:6
+        case (path, file) if path == "/public/fonts" =>
+          implicit val _rrc = new ReverseRouteContext(Map(("path", "/public/fonts")))
+          Call("GET", _prefix + { _defaultPrefix } + "fonts/" + implicitly[PathBindable[String]].unbind("file", file))
+      
+      }
+    
     }
   
   }

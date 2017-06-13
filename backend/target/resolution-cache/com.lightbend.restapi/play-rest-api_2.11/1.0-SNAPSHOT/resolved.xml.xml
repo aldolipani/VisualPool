@@ -4,7 +4,7 @@
 		module="play-rest-api_2.11"
 		revision="1.0-SNAPSHOT"
 		status="integration"
-		publication="20170509135654"
+		publication="20170613163456"
 	>
 		<description>
 		play-rest-api

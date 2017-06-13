@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:/Users/aldo/Projects/GitHub/VisualPool/backend/conf/routes
-// @DATE:Wed May 10 16:44:14 EDT 2017
+// @DATE:Tue Jun 13 17:03:50 EDT 2017
 
 
 package router {

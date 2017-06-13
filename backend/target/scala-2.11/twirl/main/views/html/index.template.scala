@@ -32,21 +32,25 @@ Seq[Any](format.raw/*1.4*/("""
     <title>VisualPool</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="visual-pool/config/environment" content="%7B%22modulePrefix%22%3A%22visual-pool%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22/%22%2C%22locationType%22%3A%22auto%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22visual-pool%22%2C%22version%22%3A%220.0.0+7d98136b%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
+
+
+    <meta name="visual-pool/config/environment" content="%7B%22modulePrefix%22%3A%22visual-pool%22%2C%22environment%22%3A%22production%22%2C%22rootURL%22%3A%22/%22%2C%22locationType%22%3A%22auto%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22visual-pool%22%2C%22version%22%3A%220.0.0+1fc36cea%22%7D%2C%22LOG_DIALOG%22%3Atrue%2C%22languages%22%3A%5B%7B%22code%22%3A%22ru%22%7D%2C%7B%22code%22%3A%22en%22%7D%5D%2C%22ember-dialog%22%3A%7B%22layoutPath%22%3A%22layouts%22%7D%2C%22exportApplicationGlobal%22%3Afalse%7D" />
+
     <link rel="stylesheet" href="/assets/vendor.css">
     <link rel="stylesheet" href="/assets/visual-pool.css">
-  </head>
 
+
+  </head>
   <body>
 
-  <script src="/assets/vendor.js"></script>
-  <script src="/assets/visual-pool.js" ></script>
 
-  <div id="ember-bootstrap-wormhole"></div>
+    <script src="/assets/vendor.js"></script>
+    <script src="/assets/visual-pool.js"></script>
+
+    <div id="ember-bootstrap-wormhole"></div>
   </body>
 
-</html>
-"""))
+</html>"""))
       }
     }
   }
@@ -66,9 +70,9 @@ Seq[Any](format.raw/*1.4*/("""
 object index extends index_Scope0.index
               /*
                   -- GENERATED --
-                  DATE: Tue Jun 13 15:45:56 EDT 2017
+                  DATE: Tue Jun 13 16:35:46 EDT 2017
                   SOURCE: /Users/aldo/Projects/GitHub/VisualPool/backend/app/views/index.scala.html
-                  HASH: 7397bfa8ecdc38ed56a11441f28359eb050620b8
+                  HASH: 08bf70cee9b86e66e25860223455751574f42ef4
                   MATRIX: 520->1|616->3|643->4
                   LINES: 20->1|25->1|26->2
                   -- GENERATED --

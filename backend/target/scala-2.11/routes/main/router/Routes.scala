@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:/Users/aldo/Projects/GitHub/VisualPool/backend/conf/routes
-// @DATE:Wed May 10 16:44:14 EDT 2017
+// @DATE:Tue Jun 13 17:03:50 EDT 2017
 
 package router
 
@@ -17,9 +17,7 @@ class Routes(
   override val errorHandler: play.api.http.HttpErrorHandler, 
   // @LINE:1
   HomeController_0: controllers.HomeController,
-  // @LINE:3
-  v1_post_PostRouter_0: v1.post.PostRouter,
-  // @LINE:6
+  // @LINE:5
   Assets_1: controllers.Assets,
   val prefix: String
 ) extends GeneratedRouter {
@@ -28,17 +26,15 @@ class Routes(
    def this(errorHandler: play.api.http.HttpErrorHandler,
     // @LINE:1
     HomeController_0: controllers.HomeController,
-    // @LINE:3
-    v1_post_PostRouter_0: v1.post.PostRouter,
-    // @LINE:6
+    // @LINE:5
     Assets_1: controllers.Assets
-  ) = this(errorHandler, HomeController_0, v1_post_PostRouter_0, Assets_1, "/")
+  ) = this(errorHandler, HomeController_0, Assets_1, "/")
 
   import ReverseRouteContext.empty
 
   def withPrefix(prefix: String): Routes = {
     router.RoutesPrefix.setPrefix(prefix)
-    new Routes(errorHandler, HomeController_0, v1_post_PostRouter_0, Assets_1, prefix)
+    new Routes(errorHandler, HomeController_0, Assets_1, prefix)
   }
 
   private[this] val defaultPrefix: String = {
@@ -47,8 +43,9 @@ class Routes(
 
   def documentation = List(
     ("""GET""", this.prefix, """controllers.HomeController.index"""),
-    prefixed_v1_post_PostRouter_0_1.router.documentation,
+    ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """poolingmethod""", """controllers.HomeController.index"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """assets/""" + "$" + """file<.+>""", """controllers.Assets.at(path:String = "/public/assets", file:String)"""),
+    ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """fonts/""" + "$" + """file<.+>""", """controllers.Assets.at(path:String = "/public/fonts", file:String)"""),
     Nil
   ).foldLeft(List.empty[(String,String,String)]) { (s,e) => e.asInstanceOf[Any] match {
     case r @ (_,_,_) => s :+ r.asInstanceOf[(String,String,String)]
@@ -73,10 +70,24 @@ class Routes(
     )
   )
 
-  // @LINE:3
-  private[this] val prefixed_v1_post_PostRouter_0_1 = Include(v1_post_PostRouter_0.withPrefix(this.prefix + (if (this.prefix.endsWith("/")) "" else "/") + "v1/posts"))
+  // @LINE:2
+  private[this] lazy val controllers_HomeController_index1_route = Route("GET",
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("poolingmethod")))
+  )
+  private[this] lazy val controllers_HomeController_index1_invoker = createInvoker(
+    HomeController_0.index,
+    HandlerDef(this.getClass.getClassLoader,
+      "router",
+      "controllers.HomeController",
+      "index",
+      Nil,
+      "GET",
+      """""",
+      this.prefix + """poolingmethod"""
+    )
+  )
 
-  // @LINE:6
+  // @LINE:5
   private[this] lazy val controllers_Assets_at2_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("assets/"), DynamicPart("file", """.+""",false)))
   )
@@ -93,6 +104,23 @@ class Routes(
     )
   )
 
+  // @LINE:6
+  private[this] lazy val controllers_Assets_at3_route = Route("GET",
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("fonts/"), DynamicPart("file", """.+""",false)))
+  )
+  private[this] lazy val controllers_Assets_at3_invoker = createInvoker(
+    Assets_1.at(fakeValue[String], fakeValue[String]),
+    HandlerDef(this.getClass.getClassLoader,
+      "router",
+      "controllers.Assets",
+      "at",
+      Seq(classOf[String], classOf[String]),
+      "GET",
+      """""",
+      this.prefix + """fonts/""" + "$" + """file<.+>"""
+    )
+  )
+
 
   def routes: PartialFunction[RequestHeader, Handler] = {
   
@@ -102,13 +130,22 @@ class Routes(
         controllers_HomeController_index0_invoker.call(HomeController_0.index)
       }
   
-    // @LINE:3
-    case prefixed_v1_post_PostRouter_0_1(handler) => handler
+    // @LINE:2
+    case controllers_HomeController_index1_route(params) =>
+      call { 
+        controllers_HomeController_index1_invoker.call(HomeController_0.index)
+      }
   
-    // @LINE:6
+    // @LINE:5
     case controllers_Assets_at2_route(params) =>
       call(Param[String]("path", Right("/public/assets")), params.fromPath[String]("file", None)) { (path, file) =>
         controllers_Assets_at2_invoker.call(Assets_1.at(path, file))
+      }
+  
+    // @LINE:6
+    case controllers_Assets_at3_route(params) =>
+      call(Param[String]("path", Right("/public/fonts")), params.fromPath[String]("file", None)) { (path, file) =>
+        controllers_Assets_at3_invoker.call(Assets_1.at(path, file))
       }
   }
 }
