@@ -1,9 +1,51 @@
 import Ember from "ember";
 
-class QRels {
+export const EnumPooledDocumentState = {
+  UNSELECTED: -3,
+  SELECTED: -2,
+  UNKNOWN: -1,
+  NON_RELEVANT: 0,
+  RELEVANT: 1
+};
+
+export class QRels {
   constructor(id, mQRel) {
-    this.id = id;
-    this.mQRel = mQRel;
+    if(!arguments.length) {
+      this.id = "default";
+      this.mQRel = {};
+    } else {
+      this.id = id;
+      this.mQRel = mQRel;
+    }
+  }
+
+  getQRel(topic){
+    if(!this.mQRel[topic]){
+      this.mQRel[topic] = new QRel(topic, {});
+    }
+    return this.mQRel[topic];
+  }
+
+  merge(qRels){
+    if(!this.mQRel){
+      for (let topic in qRels.mQRel) {
+        if(this.mQRel[topic]){
+          for(let doc in qRels.mQRel[topic]){
+            if(!this.mQRel[topic][doc]){
+              this.mQRel[topic][doc] = qRels.mQRel[topic][doc];
+            }
+          }
+        }else{
+          this.mQRel[topic] = qRels.mQRel[topic];
+        }
+      }
+    }else{
+      this.mQRel = qRels.mQRel;
+    }
+  }
+
+  addAssessment(topic, doc, rel){
+    this.getQRel(topic).addAssessment(doc, rel);
   }
 }
 
@@ -11,6 +53,20 @@ class QRel {
   constructor(id, mQRelRecord) {
     this.id = id;
     this.mQRelRecord = mQRelRecord;
+    this.lastRel = 0;
+  }
+
+  getRel(doc){
+    if(this.mQRelRecord[doc]) {
+      return this.mQRelRecord[doc].score;
+    }else{
+      return EnumPooledDocumentState.UNSELECTED;
+    }
+  }
+
+  addAssessment(doc, rel){
+    this.lastRel = rel;
+    this.mQRelRecord[doc] = new QRelRecord(0, doc, rel);
   }
 }
 
@@ -21,12 +77,6 @@ class QRelRecord {
     this.score = score;
   }
 }
-
-export{
-  QRels,
-  QRel,
-  QRelRecord
-};
 
 function parseQRels(id, text) {
   let reSs = new RegExp("\\s+");
@@ -49,6 +99,7 @@ function parseQRels(id, text) {
       mem[topicId].mQRelRecord[qRelRecord.doc] = qRelRecord;
     }
   }
+//  return QRels.create({'id':id, 'mQRels':mem});
   return new QRels(id, mem);
 }
 

@@ -26,13 +26,13 @@ export default Ember.Controller.extend({
       console.log(topic);
     },
     stepForward(){
+      console.log("stepForward");
       let strategy = this.get("poolStrategySelected");
       if(!strategy) {
         strategy = this.pool.lPoolStrategy[0];
       }
       let topic = this.get("topicSelected");
-      let generator = strategy.getPoolGenerator(topic);
-      let pooledDocument = generator.next();
+      let pooledDocument = strategy.getNextDocument(topic);
       if (pooledDocument.value) {
         console.log(pooledDocument);
         if(pooledDocument.value.status !== -1) {
@@ -51,6 +51,8 @@ export default Ember.Controller.extend({
                   'document': pooledDocument.value.doc,
                   'rel': 1
                 });
+              console.log(strategy.qRels);
+              strategy.addAssessment(topic, pooledDocument.value.doc, 1);
             },
             () => {
               this.get("lPooledDocument").pushObject(
@@ -59,20 +61,9 @@ export default Ember.Controller.extend({
                   'document': pooledDocument.value.doc,
                   'rel': 0
                 });
+              console.log(strategy.qRels);
+              strategy.addAssessment(topic, pooledDocument.value.doc, 0);
             });
-        }
-      } else {
-        let evaluator = strategy.getPoolEvaluator(topic);
-        pooledDocument = evaluator.next();
-        if (pooledDocument.value) {
-          console.log(pooledDocument);
-          this.get("lPooledDocument").pushObject(
-            {
-              'topic':topic,
-              'document':pooledDocument.value.doc,
-              'rel':pooledDocument.value.status
-            }
-          );
         }
       }
     },

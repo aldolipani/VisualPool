@@ -8,9 +8,13 @@
     </select>
   </div>
 </div>
+<div class="col-md-8">
 {{#each parameters as |parameter|}}
-  <div class="col-md-2 input-group">
+<div class="col-md-3">
+    <div class="input-group">
     <span class="input-group-addon">{{parameter.name}}</span>
     {{input class="form-control" value=parameter.value}}
-  </div>
+    </div>
+</div>
 {{/each}}
+</div>
