@@ -57,7 +57,7 @@ function parseRuns(id, text, runSize) {
     // TODO
     // sort
     let slRunRecord = lRunRecord.sort(function (a, b) {
-      return a.score - b.score;
+      return b.score - a.score;
     });
     // reconstruct rank
     for (let j = 0; j < slRunRecord.length; j++) {
@@ -70,7 +70,7 @@ function parseRuns(id, text, runSize) {
 
 export default Ember.Component.extend({
   store: Ember.inject.service(),
-  runSize: 1000,
+  runSize: 100,
   actions: {
     upload: function (event) {
       for (let i = 0; i < event.target.files.length; i++) {

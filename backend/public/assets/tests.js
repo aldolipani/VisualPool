@@ -99,13 +99,13 @@ define('visual-pool/tests/components/upload-runs.jshint', ['exports'], function 
     assert.ok(true, 'components/upload-runs.js should pass jshint.');
   });
 });
-define('visual-pool/tests/controllers/poolingmethod.jshint', ['exports'], function (exports) {
+define('visual-pool/tests/controllers/app.jshint', ['exports'], function (exports) {
   'use strict';
 
-  QUnit.module('JSHint | controllers/poolingmethod.js');
+  QUnit.module('JSHint | controllers/app.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(true, 'controllers/poolingmethod.js should pass jshint.');
+    assert.ok(false, 'controllers/app.js should pass jshint.\ncontrollers/app.js: line 90, col 13, Don\'t make functions within a loop.\ncontrollers/app.js: line 100, col 13, Don\'t make functions within a loop.\n\n2 errors');
   });
 });
 define('visual-pool/tests/helpers/destroy-app', ['exports', 'ember'], function (exports, _ember) {
@@ -221,7 +221,7 @@ define('visual-pool/tests/initializers/pool.jshint', ['exports'], function (expo
   QUnit.module('JSHint | initializers/pool.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(true, 'initializers/pool.js should pass jshint.');
+    assert.ok(false, 'initializers/pool.js should pass jshint.\ninitializers/pool.js: line 1744, col 9, \'jStat\' is not defined.\n\n1 error');
   });
 });
 define('visual-pool/tests/initializers/runs.jshint', ['exports'], function (exports) {
@@ -1663,6 +1663,15 @@ define('visual-pool/tests/routes/about.jshint', ['exports'], function (exports) 
     assert.ok(true, 'routes/about.js should pass jshint.');
   });
 });
+define('visual-pool/tests/routes/app.jshint', ['exports'], function (exports) {
+  'use strict';
+
+  QUnit.module('JSHint | routes/app.js');
+  QUnit.test('should pass jshint', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'routes/app.js should pass jshint.');
+  });
+});
 define('visual-pool/tests/routes/contact.jshint', ['exports'], function (exports) {
   'use strict';
 
@@ -1679,15 +1688,6 @@ define('visual-pool/tests/routes/index.jshint', ['exports'], function (exports) 
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
     assert.ok(true, 'routes/index.js should pass jshint.');
-  });
-});
-define('visual-pool/tests/routes/poolingmethod.jshint', ['exports'], function (exports) {
-  'use strict';
-
-  QUnit.module('JSHint | routes/poolingmethod.js');
-  QUnit.test('should pass jshint', function (assert) {
-    assert.expect(1);
-    assert.ok(true, 'routes/poolingmethod.js should pass jshint.');
   });
 });
 define('visual-pool/tests/test-helper', ['exports', 'visual-pool/tests/helpers/resolver', 'ember-qunit'], function (exports, _visualPoolTestsHelpersResolver, _emberQunit) {

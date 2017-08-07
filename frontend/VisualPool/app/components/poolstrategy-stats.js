@@ -87,8 +87,10 @@ export default Ember.Component.extend({
     let topic = this.get("topicSelected");
     let res = "|Q^+_{"+topic+"}| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.rel >= 1 && pooledDocument.topic === topic){
+      if(!docs.has(pooledDocument.document) && pooledDocument.rel >= 1 && pooledDocument.topic === topic){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -99,8 +101,10 @@ export default Ember.Component.extend({
     let topic = this.get("topicSelected");
     let res = "|Q^-_{"+topic+"}| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.rel === 0 && pooledDocument.topic === topic){
+      if(!docs.has(pooledDocument.document) && pooledDocument.rel === 0 && pooledDocument.topic === topic){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -111,8 +115,10 @@ export default Ember.Component.extend({
     let topic = this.get("topicSelected");
     let res = "|Q^?_{"+topic+"}| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.rel < 0 && pooledDocument.topic === topic){
+      if(!docs.has(pooledDocument.document) && pooledDocument.rel < 0 && pooledDocument.topic === topic){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -123,8 +129,10 @@ export default Ember.Component.extend({
     let topic = this.get("topicSelected");
     let res = "|Q_{"+topic+"}| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.topic === topic){
+      if(!docs.has(pooledDocument.document) && pooledDocument.topic === topic){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -134,8 +142,10 @@ export default Ember.Component.extend({
     let lPooledDocument = this.get("lPooledDocument");
     let res = "|Q^+| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.rel >= 1){
+      if(!docs.has(pooledDocument.document) && pooledDocument.rel >= 1){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -145,8 +155,10 @@ export default Ember.Component.extend({
     let lPooledDocument = this.get("lPooledDocument");
     let res = "|Q^-| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.rel === 0){
+      if(!docs.has(pooledDocument.document) && pooledDocument.rel === 0){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -156,8 +168,10 @@ export default Ember.Component.extend({
     let lPooledDocument = this.get("lPooledDocument");
     let res = "|Q^?| = ";
     let count = 0;
+    let docs = new Set();
     for(let pooledDocument of lPooledDocument){
-      if(pooledDocument.rel < 0){
+      if(!docs.has(pooledDocument.document) && pooledDocument.rel < 0){
+        docs.add(pooledDocument.document);
         count++;
       }
     }
@@ -166,7 +180,14 @@ export default Ember.Component.extend({
   nQ:function(){
     let lPooledDocument = this.get("lPooledDocument");
     let res = "|Q| = ";
-    let count = lPooledDocument.length;
+    let count = 0;
+    let docs = new Set();
+    for(let pooledDocument of lPooledDocument){
+      if(!docs.has(pooledDocument.document)){
+        docs.add(pooledDocument.document);
+        count++;
+      }
+    }
     return res + count;
   }.property('lPooledDocument.@each', 'topicSelected'),
 });

@@ -1,9 +1,291 @@
 <div class="jumbo">
-    <div class="right tomster"></div>
-    <h2>About Super Rentals</h2>
-    <p>
-        The Super Rentals website is a delightful project created to explore Ember.
-        By building a property rental site, we can simultaneously imagine traveling
-        AND building Ember applications.
-    </p>
+  <div class="row">
+    <div class="col-md-1 text-right"></div>
+    <div class="col-md-9 text-justify">
+      <h1>Visual Pool: A Tool to Visualize and Interact with the Pooling Method</h1>
+    </div>
+    <div class="col-md-2 text-right"></div>
+  </div>
+  <div class="row">
+    <div class="col-md-1 text-right"></div>
+    <div class="col-md-9 text-justify">
+      Every year more than 25 test collections are built among the main Information
+      Retrieval (IR) evaluation campaigns. They are extremely
+      important in IR because they become the evaluation praxis for the
+      forthcoming years. Test collections are built mostly using the pooling
+      method. The main advantage of this method is that it drastically
+      reduces the number of documents to be judged. It does so at the
+      cost of introducing biases, which are sometimes aggravated by non
+      optimal configuration. Here, we develop a novel visualization
+      technique for the pooling method, and integrate it in this demo
+      application named Visual Pool. This demo application enables the
+      user to interact with the pooling method with ease, and develops
+      visual hints in order to analyze existing test collections, and build
+      better ones.
+    </div>
+    <div class="col-md-2 text-right"></div>
+  </div>
+  <div class="row">
+    <div class="col-md-1 text-right"></div>
+    <div class="col-md-9 text-justify">
+      <h2>Introduction</h2>
+    </div>
+    <div class="col-md-2 text-right"></div>
+  </div>
+  <div class="row">
+    <div class="col-md-1 text-right"></div>
+    <div class="col-md-9 text-justify">
+      <p>
+        Test collection based evaluation in IR is a cornerstone of the IR
+        experimentation. Most often, test collections are built using the
+        pooling method. This method refers to a sampling procedure, according
+        to a given strategy, of documents to be judged. This demo
+        aims to visualize this procedure, allowing the user deeper insights.</p>
+      <p>
+        A test collection is composed of a collection of documents, a set
+        of topics, and a set of relevance judgements. A relevance judgment
+        (or qrel) expresses the relevance of a document for a given topic.
+        Due to the size of the modern collection of documents, to produce a
+        complete set of relevance judgements is impossible. For example, if
+        we examine what today would be considered a small test collection,
+        with 500,000 documents and 50 topics (approximately the size of the
+        TREC Ad Hoc 8 test collection [16]), the total relevance judgments
+        to be made would be 25 × 106. At an optimistic rate of 120 seconds
+        per judgment, this represents the equivalent of around 400 years of
+        work for one person [4]. To solve this problem, early in the modern
+        IR history, a sampling method was developed, the pooling method
+        [14].</p>
+      <p>
+        The pooling method consists in building a test collection by
+        using the results provided by a set of search engines. These are
+        usually systems designed by participants of challenges organized
+        by IR evaluation campaigns such as: TREC, CLEF, NTCIR, or FIRE.
+        In these challenges, every participant is provided a collection of
+        documents and a set of topics. Their task is to develop a search
+        engine to produce a result that maximizes the goal dened by the
+        challenge. This result is then sent to the organizers, who now have
+        everything they need to implement a pooling strategy.</p>
+      <p>
+        The most common pooling strategy is the <i>Depth@K</i> strategy.
+        This consists of creating a pool by selecting the top K documents
+        from the results submitted by each system of each participant. The
+        pool is given to the relevance assessors, who will produce a set of
+        relevance assessments, which are then used in combination with
+        an IR evaluation measure to rank the performance of the systems
+        of the participants. These test collections are then used later by
+        researchers to evaluate their systems. However, when comparing a
+        new system with the search engines that participated in the challenge,
+        the pooled systems have an advantage given by the guarantee
+        that at least their top K documents have been judged, while for the
+        new system this guarantee does not exist. This effect goes under
+        the name of pool bias, which manifests itself when the evaluated
+        system retrieves documents that will never be considered relevant
+        [5] because they had never been seen by the human assessors.</p>
+      <p>
+        This bias can be mitigated by increasing: 1) the depth of the
+        pool, which decreases the probability of retrieving a non-judged
+        document; 2) the number of topics, which reduces the variability of
+        the bias making it easier to correct; and, 3) the number (assumed
+        to be proportional to the variety) of the submitted results by the
+        participants, which leads to a better exploration of the information
+        space. However, all of these solutions result in a mere increase of
+        the number of documents to be judged and therefore in an increase
+        of the cost of the test collection. The research in the IR community
+        to reduce the pool bias has branched out into two directions: (a)
+        identifying a pooling strategy and a set of parameters that manifests
+        a lower bias, and (b) estimating the bias to correct the score
+        obtained by the search engine. The former direction has lead to
+        the development of new pooling strategies [7, 10, 11], the latter
+        instead to the development of new pool bias estimators [6, 8, 9].
+        Moreover, a hybrid approach has been also explored developing
+        IR evaluation measures in combination with pooling strategies in
+        order to minimize the pool bias [15, 17].</p>
+      <p>
+        In this paper we present a demo that enables the user to visualize
+        and interact with the pooling method. This demo addresses the
+        needs of four classes of users: test collection builders, researchers,
+        lecturers, and students. This solution aims to, by exploiting the
+        users’ sight, develop visual cues to guide the development of more
+        sophisticated analyses. This solution is open source (MIT licensed)
+        and is available in this GitHub <a>repository</a>.
+      </p>
+    </div>
+    <div class="col-md-2 text-right"></div>
+  </div>
+  <!--
+  <div class="row">
+    <div class="col-md-1 text-right"></div>
+    <div class="col-md-9 text-justify">
+      <h2>Visual Pool</h2>
+    </div>
+    <div class="col-md-2 text-right"></div>
+  </div>
+  <p>
+    Visual Pool gives its users a new perspective over the pooling
+    method, integrating a novel information visualization technique.
+    This section is divided into three parts: we rst present our pooling
+    visualization technique, then we explain how this is integrated into
+    the demo application, and we conclude listing the features of the
+    demo. The authors have not found any solution that addresses a
+    similar issue, which makes this solution unique in its kind.
+    In Figure 1 we see an example of the pool visualization technique.
+    In this case we have applied a Depth@K pooling strategy. On the
+    le, the run view highlights how the documents are distributed
+    among the runs. On the center, the unique documents runs view
+    where all the duplicated documents retrieved at a lower rank are
+    removed. On the right, the pool view shows the distribution of
+    unique documents at varying of the rank.</p>
+  <img src="/assets/images/Fig1.png" class="img-responsive" style="max-width: 30%" alt="Responsive image">
+  <p>In Figure 2 we show a screen-shot of the Visual Pool application.
+    In this user interface we identify the following sections (the
+    numbers correspond to those in the Figure):
+  </p>
+  <ol>
+    <li>Pooling Strategy Selection and Conguration. We can select
+      the pooling strategy among the 22 implemented. Every
+      pooling strategy is congurable, if needed.
+    </li>
+    <li>Visualization Control. We can select which topic to visualize,
+      and we can control which pool visualization view to
+      display: run, unique documents runs, or pool.
+    </li>
+    <li>Pool Strategy Control. We can control the progress of the
+      pooling strategy. We can here decide if to step the pooling
+      strategy forward by one document or till the end, for the
+      current topic, or for all the topics.
+    </li>
+    <li>Visualization. We visualize the pool using the previously
+      described visualization technique.
+    </li>
+    <li>Analytics. We have a set of analytics that show statistics
+      about the pool and display the current status of the pooling
+      strategy.
+    </li>
+    <li>Log. The log of the pooling strategy is displayed, where we
+      show the status of the processed documents.
+    </li>
+    <li>Run/QRels upload. We can upload the set of runs to be
+      analyzed. It is possible also to indicate at which size to cut
+      the runs. When an existing test collection is to be analyzed,
+      we can also upload the set of relevance assessments, which
+      will be used to visualize the process of assessment.
+    </li>
+    <li>QRels download. We can download the current qrels le,
+      e.g. the current set of relevance assessments as generated
+      by the pooling strategy.
+    </li>
+  </ol>
+  <p>
+    In summary, here we list all the features implemented in the
+    version of the demo presented at SIGIR:</p>
+  <ul>
+    <li>Load runs les in TREC format with a given size;</li>
+    <li>Load a qrels le in TREC format;</li>
+    <li>Select a pooling strategy and congure its parameters;</li>
+    <li>Select which topic to visualize;</li>
+    <li>Control the progress of the pooling strategy;</li>
+    <li>Visualize the pool in three views: runs, unique documents
+      runs, or pool;
+    </li>
+    <li>Visualize the log of the progress of the pooling strategy;</li>
+    <li>Visualize the statistics about the pool and the status of the
+      pooling strategy.
+    </li>
+    <li> Save the progress of the pooling strategy as a qrels le in
+      TREC format;
+    </li>
+    <li> If required by the pooling strategy ask the user to judge a
+      document;
+    </li>
+    <li>Offer API for controlling the pooling strategy in order to
+      perform the judgment with an external application.
+    </li>
+  </ul>
+
+  <p>In Table 1 are listed all the pooling strategies already implemented
+    in the demo.</p>
+
+  <h2>Use Cases</h2>
+  <p>In this section we present three use cases that cover the main user
+    needs expressed by the four classes of users we aim to address. The
+    rst use case is about the visualization of an existing test collection.</p>
+  The second use case is about the analysis of a pooling strategy.
+  Finally, the third use case is about building a test collection.
+  <h3>Visualizing a Test Collection</h3>
+  <p>This use case addresses the needs of researchers when (a) interested
+    in checking the properties of a test collection, e.g. visualize the
+    pooled runs, assess the behavior of each topic, bias of the nonpooled
+    or new systems, or (b) interested in juxtaposing two or
+    more test collections to compare their properties.
+    For this use case, it is required from the user to provide as input
+    both the runs les and the qrels le. Then, select the pooling
+    strategy used to build the test collection, select the appropriate
+    parameters, and execute the pooling strategy. Now, the application
+    will display a visualization similar to Figure 1, where the user
+    can select dynamically which view, and topic to visualize. When
+    multiple test collections are to be compared, the user can repeat
+    the process with a new instance of the application for each test
+    collection.</p>
+  <h3>Analyzing of a Pooling Strategy</h3>
+  <p>This use case addresses the needs of lecturers to help them explain
+    the pooling method to students, and to address the needs of students
+    to better understand the algorithm. However, also researchers
+    benet from this use case, e.g. when interested in juxtaposing the
+    results obtained with different pooling strategies.
+    For this use case, it is required from the user to provide as input
+    both the runs les and the qrels le. Then, the user can select a
+    pooling strategy to be analyzed, and configure it. Now, the application
+    of the pooling strategy can be controlled by the controllers
+    in the pooling controller section that allows the user to follow the
+    pooling strategy at her/his own pace. To compare different pooling
+    strategies, the user can repeat the process with a new instance of
+    the application for each pooling strategy</p>
+  <h3>Building a Test Collection</h3>
+  <p>This use case addresses the needs of a test collection builder to
+    help them control the assessments of the selected documents using
+    the application as a dashboard. This is achieved by making use
+    of the API offered by the application, which allows a third party
+    application to query the application about which document should
+    be judged, and send a response back with the label.</p>
+  <p>
+    For this use case, it is required from the user to provide as input
+    the runs les, select a pooling strategy to be used, and congure
+    it. Then, generate a unique key that will be used by the third party
+    application to communicate with the application. At this point the
+    user is able to follow the judgment process on-line. The application
+    allows the user to change strategy if required, by downloading the
+    current qrels and giving them as input to a new instance of the
+    application.</p>
+  <h2>TECHNOLOGY</h2>
+  <p>This demo has been developed as a modern web application in
+    JavaScript for the front-end and Scala for the back-end. The frontend
+    is based on the web framework Ember.js1
+    , and on the visualization
+    library p5.js2
+    , which is based on the Processing3
+    language.
+    The back-end is based on the Play Framework4
+    and for in-memory
+    storage on Redis5
+    , which is required only to support the API module.</p>
+  <p>The input les to be provided to the application are based on
+    the de facto standard format of trec eval6
+    . The format is a nonbreakable
+    space separated le. In Table 2 we show the elds in
+    the correct order as they should be contained by a runs le, and in
+    Table 3 we show the same but for a qrels le. As indicated in the
+    tables, some of the elds are ignored because they are redundant.
+    The type String+ is a String type that does not contain spaces.</p>
+  <h2>DISCUSSION & CONCLUSION</h2>
+  <p>In this demo paper we have presented Visual Pool, an application to
+    help test collection builders, researchers, lecturers, and students to
+    visualize the pooling method. We believe that this technology will
+    have a commercial impact because it allows the building of more
+    ecient test collections but at the same cost, through the application
+    of more ecient pooling strategies. We also believe it will have
+    a research impact because it enables the analysis of new pooling
+    strategies. Finally, it will have an educational impact because it
+    supports lecturers in explaining and students in understanding the
+    pooling method.</p>
+    -->
 </div>

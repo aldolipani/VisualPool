@@ -10,6 +10,7 @@ class LRunsViewer {
     this.nRuns = 0;
     this.maxNRunRecords = 0;
     this.p = p;
+    this.orderedKeys = [];
   }
 
   updateDocument(pooledDocument, topic) {
@@ -37,6 +38,7 @@ class LRunsViewer {
         }
       }
     }
+    this.orderedKeys = Object.keys(this.mRuns).sort();
   }
 
   getMaxSizeRun(mRuns, topic){
@@ -49,17 +51,29 @@ class LRunsViewer {
     return max;
   }
 
-  draw(topic, viewSelector) {
-    let w = (this.p.width - this.x) / this.nRuns;
-    let h = (this.p.height - this.y) / this.maxNRunRecords;
-    let i = 0;
+  drawRunDetail(key, x, printKey){
+    let p = this.p;
+    p.fill(0);
+    p.textSize(12);
+    if(printKey) {
+      p.text(key, x + 10, 25);
+    }
+    p.fill(255, 215, 0);
+    p.rect(x, 10, 5, p.height);
+  }
 
+  draw(topic, viewSelector) {
+    let p = this.p;
+    let w = (p.width - this.x) / this.nRuns;
+    let h = (p.height - this.y) / this.maxNRunRecords;
+    let i = 0;
     if(viewSelector === 0) {
-      for (let key in this.mRuns) {
+      for (let j = this.orderedKeys.length - 1; j >= 0; j--) {
+        let key = this.orderedKeys[j];
         this.p.textAlign(this.p.LEFT, this.p.BASELINE);
         //this.p.fill("black");
         //this.p.text(key, this.x + w * i + 5, this.y + 5);
-        this.mRuns[key].draw(this.x + w * i, this.y + 10, w, h, topic, viewSelector);
+        this.mRuns[key].draw(p.width - w - this.x - w * i, this.y + 10, w, h, topic, viewSelector);
         i++;
       }
     }else{
@@ -67,11 +81,11 @@ class LRunsViewer {
       let maxJ = this.getMaxSizeRun(this.mRuns, topic);
       for(let j = 0; j < maxJ; j++) {
         i = 0;
-        for (let key in this.mRuns) {
+        for (let key of this.orderedKeys) {
           this.p.textAlign(this.p.LEFT, this.p.BASELINE);
           if(this.mRuns[key].runs.mRun[topic].lRunRecord.length > j && !viewDoc.has(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc)) {
-            viewDoc.add(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc);
             this.mRuns[key].drawSingleDoc(j, this.x + w * i, this.y + 10, w, h, topic, viewSelector);
+            viewDoc.add(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc);
             if(viewSelector === 2) {
               i = (i + 1) % Object.keys(this.mRuns).length;
             }
@@ -80,6 +94,25 @@ class LRunsViewer {
             i = (i + 1) % Object.keys(this.mRuns).length;
           }
         }
+      }
+    }
+    i = 0;
+    for (let key of this.orderedKeys) {
+      if(p.mouseX && 0 <= p.mouseY && p.mouseY <= p.height && this.x + w * i <= p.mouseX && p.mouseX <= this.x + w * (i + 1)) {
+        //console.log("selected run + " + key);
+        if (viewSelector <= 1) {
+          this.drawRunDetail(key, this.x + w * i, true);
+        } else {
+          this.drawRunDetail(key, this.x + w * i, false);
+        }
+      }
+      i++;
+    }
+    if(viewSelector > 0) {
+      if(this.topicDocument[topic]["@selectedDoc"]){
+        this.p.textSize(11);
+        this.p.fill(0);
+        this.p.text(this.topicDocument[topic]["@selectedDoc"], this.topicDocument[topic]["@selectedX"], this.topicDocument[topic]["@selectedY"]);
       }
     }
   }
@@ -118,9 +151,19 @@ class RunsViewer {
 
   drawDoc(doc, x, y, w, h, topic) {
     let p = this.p;
-    p.fill(40);
     p.noStroke();
-    if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNSELECTED) {
+    if(x <= p.mouseX && p.mouseX <= x + w && y <= p.mouseY && p.mouseY <= y + h) {
+      if (this.topicDocument[topic]["@selectedDoc"] !== doc) {
+        this.topicDocument[topic]["@selectedDoc"] = doc;
+        this.topicDocument[topic]["@selectedValue"] = this.topicDocument[topic][doc];
+        this.topicDocument[topic]["@selectedX"] = x + 10;
+        this.topicDocument[topic]["@selectedY"] = y + h/2 + 4;
+      }
+    }
+    p.fill(40);
+    if(this.topicDocument[topic]["@selectedDoc"] === doc){
+      p.fill("#dd8b0d");
+    } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNSELECTED) {
       p.fill("#DDDDDD");
     } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.RELEVANT) {
       p.fill("#009E73");
@@ -132,6 +175,12 @@ class RunsViewer {
       p.fill("#AAAAAA"); // selected
     }
     p.rect(x, y, w, h);
+
+    // reset view
+    if(p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height){
+      this.topicDocument[topic]["@selectedDoc"] = null;
+      this.topicDocument[topic]["@selectedValue"] = null;
+    }
     p.fill(255);
   }
 
@@ -141,6 +190,11 @@ class RunsViewer {
       for (let i = 0; i < runs.mRun[topic].lRunRecord.length; i++) {
         this.drawDoc(runs.mRun[topic].lRunRecord[i].doc, x, y + i * h, w - 1, h, topic);
       }
+    }
+    if(this.topicDocument[topic]["@selectedDoc"] && this.topicDocument[topic]["@selectedX"] === x + 10){
+      this.p.textSize(11);
+      this.p.fill(0);
+      this.p.text(this.topicDocument[topic]["@selectedDoc"], this.topicDocument[topic]["@selectedX"], this.topicDocument[topic]["@selectedY"]);
     }
   }
 
@@ -171,7 +225,7 @@ export default Ember.Component.extend({
         p.setup = function () {
           p.createCanvas(canvasContainer.width(), canvasContainer.height());
           p.background(255);
-          p.frameRate(10);
+          p.frameRate(24);
         };
 
         var nRuns = 0;
@@ -203,6 +257,10 @@ export default Ember.Component.extend({
           p.textAlign(p.LEFT, p.BASELINE);
           p.fill("black");
           //p.text("Runs", 0, 10);
+
+          // MOUSE POP-UP
+          //detailedContextView.draw(p.mouseX, p.mouseY);
+
         };
 
         p.windowResized = function () {

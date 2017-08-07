@@ -507,6 +507,7 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
       this.nRuns = 0;
       this.maxNRunRecords = 0;
       this.p = p;
+      this.orderedKeys = [];
     }
 
     _createClass(LRunsViewer, [{
@@ -538,6 +539,7 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
             }
           }
         }
+        this.orderedKeys = Object.keys(this.mRuns).sort();
       }
     }, {
       key: "getMaxSizeRun",
@@ -551,18 +553,31 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
         return max;
       }
     }, {
+      key: "drawRunDetail",
+      value: function drawRunDetail(key, x, printKey) {
+        var p = this.p;
+        p.fill(0);
+        p.textSize(12);
+        if (printKey) {
+          p.text(key, x + 10, 25);
+        }
+        p.fill(255, 215, 0);
+        p.rect(x, 10, 5, p.height);
+      }
+    }, {
       key: "draw",
       value: function draw(topic, viewSelector) {
-        var w = (this.p.width - this.x) / this.nRuns;
-        var h = (this.p.height - this.y) / this.maxNRunRecords;
+        var p = this.p;
+        var w = (p.width - this.x) / this.nRuns;
+        var h = (p.height - this.y) / this.maxNRunRecords;
         var i = 0;
-
         if (viewSelector === 0) {
-          for (var key in this.mRuns) {
+          for (var j = this.orderedKeys.length - 1; j >= 0; j--) {
+            var key = this.orderedKeys[j];
             this.p.textAlign(this.p.LEFT, this.p.BASELINE);
             //this.p.fill("black");
             //this.p.text(key, this.x + w * i + 5, this.y + 5);
-            this.mRuns[key].draw(this.x + w * i, this.y + 10, w, h, topic, viewSelector);
+            this.mRuns[key].draw(p.width - w - this.x - w * i, this.y + 10, w, h, topic, viewSelector);
             i++;
           }
         } else {
@@ -570,19 +585,81 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
           var maxJ = this.getMaxSizeRun(this.mRuns, topic);
           for (var j = 0; j < maxJ; j++) {
             i = 0;
-            for (var key in this.mRuns) {
-              this.p.textAlign(this.p.LEFT, this.p.BASELINE);
-              if (this.mRuns[key].runs.mRun[topic].lRunRecord.length > j && !viewDoc.has(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc)) {
-                viewDoc.add(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc);
-                this.mRuns[key].drawSingleDoc(j, this.x + w * i, this.y + 10, w, h, topic, viewSelector);
-                if (viewSelector === 2) {
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+              for (var _iterator = this.orderedKeys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var key = _step.value;
+
+                this.p.textAlign(this.p.LEFT, this.p.BASELINE);
+                if (this.mRuns[key].runs.mRun[topic].lRunRecord.length > j && !viewDoc.has(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc)) {
+                  this.mRuns[key].drawSingleDoc(j, this.x + w * i, this.y + 10, w, h, topic, viewSelector);
+                  viewDoc.add(this.mRuns[key].runs.mRun[topic].lRunRecord[j].doc);
+                  if (viewSelector === 2) {
+                    i = (i + 1) % Object.keys(this.mRuns).length;
+                  }
+                }
+                if (viewSelector === 1) {
                   i = (i + 1) % Object.keys(this.mRuns).length;
                 }
               }
-              if (viewSelector === 1) {
-                i = (i + 1) % Object.keys(this.mRuns).length;
+            } catch (err) {
+              _didIteratorError = true;
+              _iteratorError = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion && _iterator["return"]) {
+                  _iterator["return"]();
+                }
+              } finally {
+                if (_didIteratorError) {
+                  throw _iteratorError;
+                }
               }
             }
+          }
+        }
+        i = 0;
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = this.orderedKeys[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var key = _step2.value;
+
+            if (p.mouseX && 0 <= p.mouseY && p.mouseY <= p.height && this.x + w * i <= p.mouseX && p.mouseX <= this.x + w * (i + 1)) {
+              //console.log("selected run + " + key);
+              if (viewSelector <= 1) {
+                this.drawRunDetail(key, this.x + w * i, true);
+              } else {
+                this.drawRunDetail(key, this.x + w * i, false);
+              }
+            }
+            i++;
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+              _iterator2["return"]();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+
+        if (viewSelector > 0) {
+          if (this.topicDocument[topic]["@selectedDoc"]) {
+            this.p.textSize(11);
+            this.p.fill(0);
+            this.p.text(this.topicDocument[topic]["@selectedDoc"], this.topicDocument[topic]["@selectedX"], this.topicDocument[topic]["@selectedY"]);
           }
         }
       }
@@ -629,9 +706,19 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
       key: "drawDoc",
       value: function drawDoc(doc, x, y, w, h, topic) {
         var p = this.p;
-        p.fill(40);
         p.noStroke();
-        if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNSELECTED) {
+        if (x <= p.mouseX && p.mouseX <= x + w && y <= p.mouseY && p.mouseY <= y + h) {
+          if (this.topicDocument[topic]["@selectedDoc"] !== doc) {
+            this.topicDocument[topic]["@selectedDoc"] = doc;
+            this.topicDocument[topic]["@selectedValue"] = this.topicDocument[topic][doc];
+            this.topicDocument[topic]["@selectedX"] = x + 10;
+            this.topicDocument[topic]["@selectedY"] = y + h / 2 + 4;
+          }
+        }
+        p.fill(40);
+        if (this.topicDocument[topic]["@selectedDoc"] === doc) {
+          p.fill("#dd8b0d");
+        } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.UNSELECTED) {
           p.fill("#DDDDDD");
         } else if (this.topicDocument[topic][doc] === EnumPooledDocumentState.RELEVANT) {
           p.fill("#009E73");
@@ -643,6 +730,12 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
           p.fill("#AAAAAA"); // selected
         }
         p.rect(x, y, w, h);
+
+        // reset view
+        if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) {
+          this.topicDocument[topic]["@selectedDoc"] = null;
+          this.topicDocument[topic]["@selectedValue"] = null;
+        }
         p.fill(255);
       }
     }, {
@@ -653,6 +746,11 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
           for (var i = 0; i < runs.mRun[topic].lRunRecord.length; i++) {
             this.drawDoc(runs.mRun[topic].lRunRecord[i].doc, x, y + i * h, w - 1, h, topic);
           }
+        }
+        if (this.topicDocument[topic]["@selectedDoc"] && this.topicDocument[topic]["@selectedX"] === x + 10) {
+          this.p.textSize(11);
+          this.p.fill(0);
+          this.p.text(this.topicDocument[topic]["@selectedDoc"], this.topicDocument[topic]["@selectedX"], this.topicDocument[topic]["@selectedY"]);
         }
       }
     }, {
@@ -687,7 +785,7 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
           p.setup = function () {
             p.createCanvas(canvasContainer.width(), canvasContainer.height());
             p.background(255);
-            p.frameRate(10);
+            p.frameRate(24);
           };
 
           var nRuns = 0;
@@ -719,6 +817,9 @@ define("visual-pool/components/canvas-visual-pool", ["exports", "ember"], functi
             p.textAlign(p.LEFT, p.BASELINE);
             p.fill("black");
             //p.text("Runs", 0, 10);
+
+            // MOUSE POP-UP
+            //detailedContextView.draw(p.mouseX, p.mouseY);
           };
 
           p.windowResized = function () {
@@ -972,6 +1073,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var topic = this.get("topicSelected");
       var res = "|Q^+_{" + topic + "}| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion4 = true;
       var _didIteratorError4 = false;
       var _iteratorError4 = undefined;
@@ -980,7 +1082,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator4 = lPooledDocument[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
           var pooledDocument = _step4.value;
 
-          if (pooledDocument.rel >= 1 && pooledDocument.topic === topic) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.rel >= 1 && pooledDocument.topic === topic) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1006,6 +1109,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var topic = this.get("topicSelected");
       var res = "|Q^-_{" + topic + "}| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion5 = true;
       var _didIteratorError5 = false;
       var _iteratorError5 = undefined;
@@ -1014,7 +1118,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator5 = lPooledDocument[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
           var pooledDocument = _step5.value;
 
-          if (pooledDocument.rel === 0 && pooledDocument.topic === topic) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.rel === 0 && pooledDocument.topic === topic) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1040,6 +1145,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var topic = this.get("topicSelected");
       var res = "|Q^?_{" + topic + "}| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion6 = true;
       var _didIteratorError6 = false;
       var _iteratorError6 = undefined;
@@ -1048,7 +1154,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator6 = lPooledDocument[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
           var pooledDocument = _step6.value;
 
-          if (pooledDocument.rel < 0 && pooledDocument.topic === topic) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.rel < 0 && pooledDocument.topic === topic) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1074,6 +1181,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var topic = this.get("topicSelected");
       var res = "|Q_{" + topic + "}| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion7 = true;
       var _didIteratorError7 = false;
       var _iteratorError7 = undefined;
@@ -1082,7 +1190,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator7 = lPooledDocument[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
           var pooledDocument = _step7.value;
 
-          if (pooledDocument.topic === topic) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.topic === topic) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1107,6 +1216,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var lPooledDocument = this.get("lPooledDocument");
       var res = "|Q^+| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion8 = true;
       var _didIteratorError8 = false;
       var _iteratorError8 = undefined;
@@ -1115,7 +1225,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator8 = lPooledDocument[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
           var pooledDocument = _step8.value;
 
-          if (pooledDocument.rel >= 1) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.rel >= 1) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1140,6 +1251,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var lPooledDocument = this.get("lPooledDocument");
       var res = "|Q^-| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion9 = true;
       var _didIteratorError9 = false;
       var _iteratorError9 = undefined;
@@ -1148,7 +1260,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator9 = lPooledDocument[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
           var pooledDocument = _step9.value;
 
-          if (pooledDocument.rel === 0) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.rel === 0) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1173,6 +1286,7 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
       var lPooledDocument = this.get("lPooledDocument");
       var res = "|Q^?| = ";
       var count = 0;
+      var docs = new Set();
       var _iteratorNormalCompletion10 = true;
       var _didIteratorError10 = false;
       var _iteratorError10 = undefined;
@@ -1181,7 +1295,8 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
         for (var _iterator10 = lPooledDocument[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
           var pooledDocument = _step10.value;
 
-          if (pooledDocument.rel < 0) {
+          if (!docs.has(pooledDocument.document) && pooledDocument.rel < 0) {
+            docs.add(pooledDocument.document);
             count++;
           }
         }
@@ -1205,7 +1320,36 @@ define("visual-pool/components/poolstrategy-stats", ["exports", "ember"], functi
     nQ: (function () {
       var lPooledDocument = this.get("lPooledDocument");
       var res = "|Q| = ";
-      var count = lPooledDocument.length;
+      var count = 0;
+      var docs = new Set();
+      var _iteratorNormalCompletion11 = true;
+      var _didIteratorError11 = false;
+      var _iteratorError11 = undefined;
+
+      try {
+        for (var _iterator11 = lPooledDocument[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
+          var pooledDocument = _step11.value;
+
+          if (!docs.has(pooledDocument.document)) {
+            docs.add(pooledDocument.document);
+            count++;
+          }
+        }
+      } catch (err) {
+        _didIteratorError11 = true;
+        _iteratorError11 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion11 && _iterator11["return"]) {
+            _iterator11["return"]();
+          }
+        } finally {
+          if (_didIteratorError11) {
+            throw _iteratorError11;
+          }
+        }
+      }
+
       return res + count;
     }).property('lPooledDocument.@each', 'topicSelected')
   });
@@ -1444,7 +1588,7 @@ define("visual-pool/components/upload-runs", ["exports", "ember"], function (exp
       // TODO
       // sort
       var slRunRecord = lRunRecord.sort(function (a, b) {
-        return a.score - b.score;
+        return b.score - a.score;
       });
       // reconstruct rank
       for (var j = 0; j < slRunRecord.length; j++) {
@@ -1457,7 +1601,7 @@ define("visual-pool/components/upload-runs", ["exports", "ember"], function (exp
 
   exports["default"] = _ember["default"].Component.extend({
     store: _ember["default"].inject.service(),
-    runSize: 1000,
+    runSize: 100,
     actions: {
       upload: function upload(event) {
         var _this = this;
@@ -1490,7 +1634,7 @@ define("visual-pool/components/upload-runs", ["exports", "ember"], function (exp
   });
 });
 /*jshint loopfunc: true */
-define("visual-pool/controllers/poolingmethod", ["exports", "ember"], function (exports, _ember) {
+define("visual-pool/controllers/app", ["exports", "ember"], function (exports, _ember) {
   exports["default"] = _ember["default"].Controller.extend({
     pool: null,
     viewSelector: 0,
@@ -1556,30 +1700,44 @@ define("visual-pool/controllers/poolingmethod", ["exports", "ember"], function (
         }
       },
       fastForward: function fastForward() {
+        var _this3 = this;
+
+        console.log("stepForward");
         var strategy = this.get("poolStrategySelected");
         if (!strategy) {
           strategy = this.pool.lPoolStrategy[0];
         }
         var topic = this.get("topicSelected");
-        var generator = strategy.getPoolGenerator(topic);
-        var pooledDocument = generator.next();
+        var pooledDocument = strategy.getNextDocument(topic);
         while (pooledDocument.value) {
-          this.get("lPooledDocument").pushObject({
-            'topic': topic,
-            'document': pooledDocument.value.doc,
-            'rel': pooledDocument.value.status
-          });
-          pooledDocument = generator.next();
-        }
-        var evaluator = strategy.getPoolEvaluator(topic);
-        pooledDocument = evaluator.next();
-        while (pooledDocument.value) {
-          this.get("lPooledDocument").pushObject({
-            'topic': topic,
-            'document': pooledDocument.value.doc,
-            'rel': pooledDocument.value.status
-          });
-          pooledDocument = evaluator.next();
+          console.log(pooledDocument);
+          if (pooledDocument.value.status !== -1) {
+            this.get("lPooledDocument").pushObject({
+              'topic': topic,
+              'document': pooledDocument.value.doc,
+              'rel': pooledDocument.value.status
+            });
+            pooledDocument = strategy.getNextDocument(topic);
+          } else {
+            this.askForRelevance(topic, pooledDocument.value.doc, function () {
+              _this3.get("lPooledDocument").pushObject({
+                'topic': topic,
+                'document': pooledDocument.value.doc,
+                'rel': 1
+              });
+              console.log(strategy.qRels);
+              strategy.addAssessment(topic, pooledDocument.value.doc, 1);
+            }, function () {
+              _this3.get("lPooledDocument").pushObject({
+                'topic': topic,
+                'document': pooledDocument.value.doc,
+                'rel': 0
+              });
+              console.log(strategy.qRels);
+              strategy.addAssessment(topic, pooledDocument.value.doc, 0);
+            });
+            break;
+          }
         }
       }
     }
@@ -1828,7 +1986,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       this.lRuns = [];
       this.mTopicPool = {};
       this.lTopicPool = _ember["default"].A();
-      this.lPoolStrategy = [new DepthD(), new TakeN(), new FairTakeN(), new CombMAXTakeN(), new CombMINTakeN(), new CombMEDTakeN(), new CombSUMTakeN(), new CombANZTakeN(), new CombMNZTakeN(), new DCGTakeN(), new RRFTakeN(), new RBPTakeN(), new RBPAdaptiveTakeN(), new RBPAdaptiveStarTakeN(), new MTFTakeN()];
+      this.lPoolStrategy = [new DepthD(), new TakeN(), new FairTakeN(), new BordaTakeN(), new CondorcetTakeN(), new CombMAXTakeN(), new CombMINTakeN(), new CombMEDTakeN(), new CombSUMTakeN(), new CombANZTakeN(), new CombMNZTakeN(), new DCGTakeN(), new RRFTakeN(), new RBPTakeN(), new RBPAdaptiveTakeN(), new RBPAdaptiveStarTakeN(), new MTFTakeN(), new HedgeTakeN(), new MABRandomTakeN(), new MABGreedyTakeN(), new MABUCBTakeN(), new MABBetaTakeN(), new MABMaxMeanTakeN()];
     }
 
     _createClass(Pool, [{
@@ -1900,11 +2058,35 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     this.value = value;
   };
 
+  var Beta = function Beta(value) {
+    _classCallCheck(this, Beta);
+
+    this.name = "β";
+    this.description = "β";
+    this.value = value;
+  };
+
   var N = function N(value) {
     _classCallCheck(this, N);
 
     this.name = "N";
     this.description = "Size of the Pool";
+    this.value = value;
+  };
+
+  var C0 = function C0(value) {
+    _classCallCheck(this, C0);
+
+    this.name = "c0";
+    this.description = "";
+    this.value = value;
+  };
+
+  var C1 = function C1(value) {
+    _classCallCheck(this, C1);
+
+    this.name = "c1";
+    this.description = "";
     this.value = value;
   };
 
@@ -2278,7 +2460,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(TakeN.prototype), "constructor", this).call(this);
       this.name = "Take@N";
       // parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
       this.nQ = 0;
     }
 
@@ -2309,7 +2491,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
             case 6:
               if (!(j < lRun[0].lRunRecord.length)) {
-                context$2$0.next = 26;
+                context$2$0.next = 27;
                 break;
               }
 
@@ -2317,12 +2499,12 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
             case 8:
               if (!(i < lRun.length)) {
-                context$2$0.next = 23;
+                context$2$0.next = 24;
                 break;
               }
 
               if (!lRun[i].lRunRecord[j]) {
-                context$2$0.next = 20;
+                context$2$0.next = 21;
                 break;
               }
 
@@ -2330,7 +2512,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
               doc = lRun[i].lRunRecord[j].doc;
 
               if (docs.has(doc)) {
-                context$2$0.next = 20;
+                context$2$0.next = 21;
                 break;
               }
 
@@ -2341,25 +2523,26 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
             case 17:
               n = n + 1;
+              console.log("n/N/|T|: " + n + "/" + this.N.value + "/" + this.nQ);
 
-              if (!(n >= this.N.value / this.mQRel.size())) {
-                context$2$0.next = 20;
+              if (!(n >= this.N.value / this.nQ)) {
+                context$2$0.next = 21;
                 break;
               }
 
               return context$2$0.abrupt("return");
 
-            case 20:
+            case 21:
               i++;
               context$2$0.next = 8;
               break;
 
-            case 23:
+            case 24:
               j++;
               context$2$0.next = 6;
               break;
 
-            case 26:
+            case 27:
             case "end":
               return context$2$0.stop();
           }
@@ -2379,7 +2562,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(FairTakeN.prototype), "constructor", this).call(this);
       this.name = "FairTake@N";
       // parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
+      this.nQ = 0;
     }
 
     _createClass(FairTakeN, [{
@@ -2394,6 +2578,9 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         return regeneratorRuntime.wrap(function genPool$(context$2$0) {
           while (1) switch (context$2$0.prev = context$2$0.next) {
             case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
               if (!this.tDocs[topic]) {
                 this.tDocs[topic] = new Set();
               }
@@ -2404,59 +2591,60 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
               n = 0;
               j = 0;
 
-            case 5:
+            case 6:
               if (!(j < lRun[0].lRunRecord.length)) {
-                context$2$0.next = 25;
+                context$2$0.next = 27;
                 break;
               }
 
               nlRun = this.shuffle(lRun);
               i = 0;
 
-            case 8:
+            case 9:
               if (!(i < lRun.length)) {
-                context$2$0.next = 22;
+                context$2$0.next = 24;
                 break;
               }
 
               if (!nlRun[i].lRunRecord[j]) {
-                context$2$0.next = 19;
+                context$2$0.next = 21;
                 break;
               }
 
               doc = nlRun[i].lRunRecord[j].doc;
 
               if (docs.has(doc)) {
-                context$2$0.next = 19;
+                context$2$0.next = 21;
                 break;
               }
 
               docs.add(doc);
               pooledDocument = new PooledDocument(doc, _visualPoolComponentsUploadQrels.EnumPooledDocumentState.SELECTED);
-              context$2$0.next = 16;
+              context$2$0.next = 17;
               return pooledDocument;
 
-            case 16:
+            case 17:
               n = n + 1;
+              console.log("n/N/|T|: " + n + "/" + this.N.value + "/" + this.nQ);
 
-              if (!(n >= this.N.value / this.qRels.mQRel.size())) {
-                context$2$0.next = 19;
+              if (!(n >= this.N.value / this.nQ)) {
+                context$2$0.next = 21;
                 break;
               }
 
               return context$2$0.abrupt("return");
 
-            case 19:
+            case 21:
               i++;
-              context$2$0.next = 8;
+              context$2$0.next = 9;
               break;
 
-            case 22:
+            case 24:
               j++;
-              context$2$0.next = 5;
+              context$2$0.next = 6;
               break;
 
-            case 25:
+            case 27:
             case "end":
               return context$2$0.stop();
           }
@@ -2476,7 +2664,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(CombXTakeN.prototype), "constructor", this).call(this);
       this.name = "CombXTake@N";
       // parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
       this.normalizedScore = false;
       this.nQ = 0;
     }
@@ -2538,6 +2726,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       value: function getLDocScore(topic) {
         if (!this.normalizedScore) {
           this.addMinMaxNormalizedScore2LRuns();
+          console.log(this.lRuns);
           this.normalizedScore = true;
         }
         var doc2RunRecord = this.getDoc2RunRecord(topic);
@@ -2550,7 +2739,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           lDocScore.push({ 'doc': doc, 'value': value });
         }
         lDocScore.sort(function (docScoreA, docScoreB) {
-          return docScoreA.value - docScoreB.value;
+          return docScoreB.value - docScoreA.value;
         });
         return lDocScore;
       }
@@ -2769,8 +2958,255 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     return CombMNZTakeN;
   })(CombXTakeN);
 
-  var MeasureBasedTakeN = (function (_TwoStagesStrategy5) {
-    _inherits(MeasureBasedTakeN, _TwoStagesStrategy5);
+  var BordaTakeN = (function (_TwoStagesStrategy5) {
+    _inherits(BordaTakeN, _TwoStagesStrategy5);
+
+    function BordaTakeN() {
+      _classCallCheck(this, BordaTakeN);
+
+      _get(Object.getPrototypeOf(BordaTakeN.prototype), "constructor", this).call(this);
+      this.name = "BordaTake@N";
+      // parameters
+      this.N = new N(10000);
+      this.nQ = 0;
+    }
+
+    _createClass(BordaTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "getDoc2RunRecord",
+      value: function getDoc2RunRecord(topic) {
+        var doc2Runs = {};
+        var lRuns = this.lRuns;
+        for (var i = 0; i < lRuns.length; i++) {
+          var runs = lRuns[i];
+          var lRunRecord = runs.mRun[topic].lRunRecord;
+          for (var j = 0; j < lRunRecord.length; j++) {
+            if (!doc2Runs[lRunRecord[j].doc]) {
+              doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
+            } else {
+              doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+            }
+          }
+        }
+        return doc2Runs;
+      }
+    }, {
+      key: "getLDocScore",
+      value: function getLDocScore(topic) {
+        var doc2RunRecord = this.getDoc2RunRecord(topic);
+        var lDocScore = [];
+        for (var doc in doc2RunRecord) {
+          var lRunRecord = doc2RunRecord[doc];
+          var value = 0;
+          for (var i = 0; i < lRunRecord.length; i++) {
+            value += -lRunRecord[i].rank;
+          }
+          lDocScore.push({ 'doc': doc, 'value': value });
+        }
+        lDocScore.sort(function (docScoreA, docScoreB) {
+          return docScoreB.value - docScoreA.value;
+        });
+        return lDocScore;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, lDocScore, n, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              lDocScore = this.getLDocScore(topic);
+              n = 0;
+              i = 0;
+
+            case 6:
+              if (!(i < lDocScore.length)) {
+                context$2$0.next = 19;
+                break;
+              }
+
+              doc = lDocScore[i].doc;
+
+              if (docs.has(doc)) {
+                context$2$0.next = 16;
+                break;
+              }
+
+              docs.add(doc);
+              pooledDocument = new PooledDocument(doc, _visualPoolComponentsUploadQrels.EnumPooledDocumentState.SELECTED);
+              context$2$0.next = 13;
+              return pooledDocument;
+
+            case 13:
+              n++;
+
+              if (!(n >= this.N.value / this.nQ)) {
+                context$2$0.next = 16;
+                break;
+              }
+
+              return context$2$0.abrupt("return");
+
+            case 16:
+              i++;
+              context$2$0.next = 6;
+              break;
+
+            case 19:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return BordaTakeN;
+  })(TwoStagesStrategy);
+
+  var CondorcetTakeN = (function (_TwoStagesStrategy6) {
+    _inherits(CondorcetTakeN, _TwoStagesStrategy6);
+
+    function CondorcetTakeN() {
+      _classCallCheck(this, CondorcetTakeN);
+
+      _get(Object.getPrototypeOf(CondorcetTakeN.prototype), "constructor", this).call(this);
+      this.name = "CondorcetTake@N";
+      // parameters
+      this.N = new N(10000);
+      this.nQ = 0;
+    }
+
+    _createClass(CondorcetTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "getDoc2RunId2Rank",
+      value: function getDoc2RunId2Rank(topic) {
+        var doc2Runs = {};
+        var lRuns = this.lRuns;
+        for (var i = 0; i < lRuns.length; i++) {
+          var runs = lRuns[i];
+          var lRunRecord = runs.mRun[topic].lRunRecord;
+          for (var j = 0; j < lRunRecord.length; j++) {
+            if (!doc2Runs[lRunRecord[j].doc]) {
+              doc2Runs[lRunRecord[j].doc] = {};
+              doc2Runs[lRunRecord[j].doc][runs.id] = lRunRecord[j].rank;
+            } else {
+              doc2Runs[lRunRecord[j].doc][runs.id] = lRunRecord[j].rank;
+            }
+          }
+        }
+        return doc2Runs;
+      }
+    }, {
+      key: "getLDocScore",
+      value: function getLDocScore(topic) {
+        var doc2RunId2Rank = this.getDoc2RunId2Rank(topic);
+        var lDocScore = [];
+        for (var doc0 in doc2RunId2Rank) {
+          var value = 0;
+          for (var doc1 in doc2RunId2Rank) {
+            var value1 = 0;
+            if (doc0 !== doc1) {
+              for (var run0 in doc2RunId2Rank[doc0]) {
+                if (!doc2RunId2Rank[doc1][run0]) {
+                  value1++;
+                } else {
+                  value1 += Math.sign(doc2RunId2Rank[doc1][run0] - doc2RunId2Rank[doc0][run0]);
+                }
+              }
+              if (doc2RunId2Rank[doc1].length - doc2RunId2Rank[doc0].length > 0) {
+                value1 -= doc2RunId2Rank[doc1].length - doc2RunId2Rank[doc0].length;
+              }
+            }
+            if (value1 > 0) {
+              value++;
+            }
+          }
+          lDocScore.push({ 'doc': doc0, 'value': value });
+        }
+        lDocScore.sort(function (docScoreA, docScoreB) {
+          return docScoreB.value - docScoreA.value;
+        });
+        return lDocScore;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, lDocScore, n, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              lDocScore = this.getLDocScore(topic);
+              n = 0;
+              i = 0;
+
+            case 6:
+              if (!(i < lDocScore.length)) {
+                context$2$0.next = 19;
+                break;
+              }
+
+              doc = lDocScore[i].doc;
+
+              if (docs.has(doc)) {
+                context$2$0.next = 16;
+                break;
+              }
+
+              docs.add(doc);
+              pooledDocument = new PooledDocument(doc, _visualPoolComponentsUploadQrels.EnumPooledDocumentState.SELECTED);
+              context$2$0.next = 13;
+              return pooledDocument;
+
+            case 13:
+              n++;
+
+              if (!(n >= this.N.value / this.nQ)) {
+                context$2$0.next = 16;
+                break;
+              }
+
+              return context$2$0.abrupt("return");
+
+            case 16:
+              i++;
+              context$2$0.next = 6;
+              break;
+
+            case 19:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return CondorcetTakeN;
+  })(TwoStagesStrategy);
+
+  var MeasureBasedTakeN = (function (_TwoStagesStrategy7) {
+    _inherits(MeasureBasedTakeN, _TwoStagesStrategy7);
 
     function MeasureBasedTakeN() {
       _classCallCheck(this, MeasureBasedTakeN);
@@ -2778,7 +3214,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(MeasureBasedTakeN.prototype), "constructor", this).call(this);
       this.name = "MeasureBasedTake@N";
       // parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
       this.nQ = 0;
     }
 
@@ -3006,7 +3442,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
   }
 
   function rbpResidual(p, run, qRel) {
-    var res = 0;
+    var res = 1;
     var _iteratorNormalCompletion4 = true;
     var _didIteratorError4 = false;
     var _iteratorError4 = undefined;
@@ -3015,8 +3451,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       for (var _iterator4 = run.lRunRecord[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
         var rr = _step4.value;
 
-        if (qRel.getRel(rr.doc) < 0 || qRel.getRel(rr.doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.SELECTED) {
-          res += (1 - p) * Math.pow(p, rr.rank - 1);
+        if (qRel.getRel(rr.doc) < 0 || qRel.getRel(rr.doc) < _visualPoolComponentsUploadQrels.EnumPooledDocumentState.NON_RELEVANT) {
+          res -= (1 - p) * Math.pow(p, rr.rank - 1);
         }
       }
     } catch (err) {
@@ -3037,8 +3473,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     return res;
   }
 
-  var RBPAdaptiveTakeN = (function (_TwoStagesStrategy6) {
-    _inherits(RBPAdaptiveTakeN, _TwoStagesStrategy6);
+  var RBPAdaptiveTakeN = (function (_TwoStagesStrategy8) {
+    _inherits(RBPAdaptiveTakeN, _TwoStagesStrategy8);
 
     function RBPAdaptiveTakeN() {
       _classCallCheck(this, RBPAdaptiveTakeN);
@@ -3046,7 +3482,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(RBPAdaptiveTakeN.prototype), "constructor", this).call(this);
       this.name = "RBPAdaptiveTake@N";
       //parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
       this.P = new P(0.8);
       this.nQ = 0;
 
@@ -3076,6 +3512,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         this.lRuns.map(function (runs) {
           return mRunsScores[runs.id] = rbpResidual(_this.P.value, runs.mRun[topic], _this.qRels.getQRel(topic));
         });
+        console.log(mRunsScores);
         var lDocScore = [];
         for (var doc in doc2RunsIdRunRecord) {
           var lRunsIdRunRecord = doc2RunsIdRunRecord[doc];
@@ -3137,6 +3574,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         lDocScore.sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
+        console.log(lDocScore);
         var res = lDocScore[0].doc;
         delete doc2RunsIdRunRecord[res];
         return res;
@@ -3159,7 +3597,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
             case 4:
               if (!(i < this.N.value / this.nQ)) {
-                context$2$0.next = 16;
+                context$2$0.next = 15;
                 break;
               }
 
@@ -3168,23 +3606,21 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
               console.log(doc);
 
               if (docs.has(doc)) {
-                context$2$0.next = 13;
+                context$2$0.next = 12;
                 break;
               }
 
               docs.add(doc);
               pooledDocument = new PooledDocument(doc, _visualPoolComponentsUploadQrels.EnumPooledDocumentState.SELECTED);
-              //this.getPooledDocument(doc, this.qRels.getQRel(topic));
-              this.qRels.getQRel(topic).mQRelRecord[doc] = pooledDocument;
-              context$2$0.next = 13;
+              context$2$0.next = 12;
               return pooledDocument;
 
-            case 13:
+            case 12:
               i++;
               context$2$0.next = 4;
               break;
 
-            case 16:
+            case 15:
             case "end":
               return context$2$0.stop();
           }
@@ -3204,7 +3640,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(RBPAdaptiveStarTakeN.prototype), "constructor", this).call(this);
       this.name = "RBPAdaptive*Take@N";
       //parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
       this.P = new P(0.8);
       this.nQ = 0;
 
@@ -3331,7 +3767,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
             case 4:
               if (!(i < this.N.value / this.nQ)) {
-                context$2$0.next = 15;
+                context$2$0.next = 16;
                 break;
               }
 
@@ -3340,21 +3776,24 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
               console.log(doc);
 
               if (docs.has(doc)) {
-                context$2$0.next = 12;
+                context$2$0.next = 13;
                 break;
               }
 
               docs.add(doc);
-              pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
-              context$2$0.next = 12;
+              //let pooledDocument = new PooledDocument(doc, EnumPooledDocumentState.SELECTED);
+              pooledDocument = this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 13;
               return pooledDocument;
 
-            case 12:
+            case 13:
               i++;
               context$2$0.next = 4;
               break;
 
-            case 15:
+            case 16:
             case "end":
               return context$2$0.stop();
           }
@@ -3374,7 +3813,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       _get(Object.getPrototypeOf(MTFTakeN.prototype), "constructor", this).call(this);
       this.name = "MTFTake@N";
       //parameters
-      this.N = new N(1000);
+      this.N = new N(10000);
       this.nQ = 0;
 
       this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
@@ -3402,6 +3841,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       value: function getBestDocument(topic) {
         var rel = 0;
         if (this.tQRels.mQRel[topic]) {
+          console.log(this.tQRels.mQRel[topic].mQRelRecord);
           rel = Object.values(this.tQRels.mQRel[topic].mQRelRecord)[Object.values(this.tQRels.mQRel[topic].mQRelRecord).length - 1].score;
         }
         if (!this.mLNumRuns[topic]) {
@@ -3422,7 +3862,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           console.log(mRunsScores);
           var maxValue = -Infinity;
           for (var i = 0; i < Object.values(mRunsScores).length; i++) {
-            if (Object.values(mRunsScores)[i] > maxValue) {
+            if (Object.values(mRunsScores)[i] > maxValue && lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
               maxValue = Object.values(mRunsScores)[i];
               maxRunsId = i;
             }
@@ -3430,6 +3870,416 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           this.mMaxRunsId[topic] = maxRunsId;
         }
         maxRunsId = this.mMaxRunsId[topic];
+        var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
+        lNumRuns[maxRunsId]++;
+        return res;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              i = 0;
+
+            case 4:
+              if (!(i < this.N.value / this.nQ)) {
+                context$2$0.next = 17;
+                break;
+              }
+
+              doc = this.getBestDocument(topic);
+
+              while (this.tQRels.getQRel(topic).getRel(doc) !== _visualPoolComponentsUploadQrels.EnumPooledDocumentState.UNSELECTED) {
+                doc = this.getBestDocument(topic);
+              }
+              console.log(doc);
+
+              if (docs.has(doc)) {
+                context$2$0.next = 14;
+                break;
+              }
+
+              docs.add(doc);
+              //let pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
+              pooledDocument = this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 14;
+              return pooledDocument;
+
+            case 14:
+              i++;
+              context$2$0.next = 4;
+              break;
+
+            case 17:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return MTFTakeN;
+  })(PoolingStrategy);
+
+  var HedgeTakeN = (function (_PoolingStrategy4) {
+    _inherits(HedgeTakeN, _PoolingStrategy4);
+
+    function HedgeTakeN() {
+      _classCallCheck(this, HedgeTakeN);
+
+      _get(Object.getPrototypeOf(HedgeTakeN.prototype), "constructor", this).call(this);
+      this.name = "HedgeTake@N";
+      //parameters
+      this.Beta = new Beta(0.8);
+      this.N = new N(10000);
+      this.D = new D(10000000);
+      this.nQ = 0;
+
+      this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
+      this.mLNumRuns = {};
+      this.mMaxRunsId = {};
+      this.mDoc2RunId2Rank = {};
+      this.avgGStar = {};
+      this.ll = {};
+    }
+
+    _createClass(HedgeTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.Beta, this.N, this.D];
+      }
+    }, {
+      key: "getDoc2RunId2Rank",
+      value: function getDoc2RunId2Rank(topic) {
+        var doc2Runs = {};
+        var lRuns = this.lRuns;
+        for (var i = 0; i < lRuns.length; i++) {
+          var runs = lRuns[i];
+          var lRunRecord = runs.mRun[topic].lRunRecord;
+          for (var j = 0; j < lRunRecord.length; j++) {
+            if (!doc2Runs[lRunRecord[j].doc]) {
+              doc2Runs[lRunRecord[j].doc] = {};
+              doc2Runs[lRunRecord[j].doc][runs.id] = lRunRecord[j].rank;
+            } else {
+              doc2Runs[lRunRecord[j].doc][runs.id] = lRunRecord[j].rank;
+            }
+          }
+        }
+        return doc2Runs;
+      }
+    }, {
+      key: "getRunId2Length",
+      value: function getRunId2Length(topic) {
+        var runsId2Length = {};
+        var lRuns = this.lRuns;
+        for (var i = 0; i < lRuns.length; i++) {
+          runsId2Length[lRuns[i].id] = lRuns[i].mRun[topic].lRunRecord.length;
+        }
+        return runsId2Length;
+      }
+    }, {
+      key: "getNextDocument",
+      value: function getNextDocument(topic) {
+        if (!this.gens[topic]) {
+          this.gens[topic] = this.genPool(topic);
+        }
+        var doc = this.gens[topic].next();
+        console.log(doc);
+        return doc;
+      }
+    }, {
+      key: "g",
+      value: function g(rank) {
+        //console.log("g parameters - 2");
+        //console.log(Math.log(this.D.value));
+        //console.log(Math.log(rank));
+        return Math.log(this.D.value) - Math.log(rank);
+      }
+    }, {
+      key: "gStar",
+      value: function gStar(doc, runsId, doc2RunId2Rank, topic) {
+        //console.log("gStar parameters - 4");
+        //console.log(doc);
+        //console.log(runsId);
+        //console.log(doc2RunId2Rank);
+        //console.log(topic);
+        var value = 0;
+        if (!doc2RunId2Rank[doc][runsId]) {
+          var _length = this.getRunId2Length(topic)[runsId];
+          if (!this.avgGStar[this.D.value - _length]) {
+            for (var i = _length + 1; i <= this.D.value; i++) {
+              value += this.g(i);
+            }
+            value /= this.D.value - _length;
+            this.avgGStar[this.D.value - _length] = value;
+          }
+          value = this.avgGStar[this.D.value - _length];
+        } else {
+          value = this.g(doc2RunId2Rank[doc][runsId]);
+        }
+        return value;
+      }
+    }, {
+      key: "l",
+      value: function l(runs, tQRel, doc2RunId2Rank, topic) {
+        if (!this.ll[topic]) {
+          this.ll[topic] = {};
+        }
+        if (!this.ll[topic][runs.id]) {
+          this.ll[topic][runs.id] = 0;
+        }
+        var cl = this.ll[topic][runs.id];
+        var res = cl;
+        if (Object.values(tQRel.mQRelRecord).length > 0) {
+          var rel = Object.values(tQRel.mQRelRecord)[Object.values(tQRel.mQRelRecord).length - 1].score;
+          var doc = Object.values(tQRel.mQRelRecord)[Object.values(tQRel.mQRelRecord).length - 1].doc;
+
+          //console.log("l parameters - 4");
+          //console.log(runs);
+          //console.log(tQRel);
+          //console.log(doc2RunId2Rank);
+          //console.log(topic);
+          if (rel === 0) {
+            res += this.gStar(doc, runs.id, doc2RunId2Rank, topic) / 2;
+          } else if (rel === 1) {
+            res -= this.gStar(doc, runs.id, doc2RunId2Rank, topic) / 2;
+          }
+          //}
+          this.ll[topic][runs.id] = res;
+        }
+        return res;
+      }
+
+      /*l(runs, tQRel, doc2RunId2Rank, topic) {
+        //console.log("l parameters - 4");
+        //console.log(runs);
+        //console.log(tQRel);
+        //console.log(doc2RunId2Rank);
+        //console.log(topic);
+        let res = 0;
+        for (let runRecord of runs.mRun[topic].lRunRecord) {
+          //console.log(tQRel);
+          if (tQRel.getRel(runRecord.doc) === 0) {
+            res += this.gStar(runRecord.doc, runs.id, doc2RunId2Rank, topic);
+          } else if (tQRel.getRel(runRecord.doc) === 1) {
+            res -= this.gStar(runRecord.doc, runs.id, doc2RunId2Rank, topic);
+          }
+        }
+        return res / 2;
+      }*/
+
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        if (!this.mDoc2RunId2Rank[topic]) {
+          this.mDoc2RunId2Rank[topic] = this.getDoc2RunId2Rank(topic);
+        }
+        var doc2RunId2Rank = this.mDoc2RunId2Rank[topic];
+        var lDocScore = [];
+        var mRunsScores = {};
+        var den = 0;
+        var _iteratorNormalCompletion9 = true;
+        var _didIteratorError9 = false;
+        var _iteratorError9 = undefined;
+
+        try {
+          for (var _iterator9 = this.lRuns[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+            var runs = _step9.value;
+
+            mRunsScores[runs.id] = this.l(runs, this.tQRels.getQRel(topic), doc2RunId2Rank, topic);
+            mRunsScores[runs.id] = Math.pow(this.Beta.value, mRunsScores[runs.id]);
+            den += mRunsScores[runs.id];
+          }
+        } catch (err) {
+          _didIteratorError9 = true;
+          _iteratorError9 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
+              _iterator9["return"]();
+            }
+          } finally {
+            if (_didIteratorError9) {
+              throw _iteratorError9;
+            }
+          }
+        }
+
+        for (var doc in doc2RunId2Rank) {
+          // compute l scores
+          var value = 0;
+
+          var _iteratorNormalCompletion10 = true;
+          var _didIteratorError10 = false;
+          var _iteratorError10 = undefined;
+
+          try {
+            for (var _iterator10 = this.lRuns[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+              var runs = _step10.value;
+
+              value += mRunsScores[runs.id] / den * this.gStar(doc, runs.id, doc2RunId2Rank, topic);
+              //console.log("loop");
+              //console.log(runs.id);
+              //console.log(mRunsScores[runs.id]);
+              //console.log(den);
+              //console.log(this.gStar(doc, runs.id, doc2RunId2Rank, topic));
+              //console.log(value);
+            }
+          } catch (err) {
+            _didIteratorError10 = true;
+            _iteratorError10 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
+                _iterator10["return"]();
+              }
+            } finally {
+              if (_didIteratorError10) {
+                throw _iteratorError10;
+              }
+            }
+          }
+
+          lDocScore.push({ 'doc': doc, 'value': value });
+        }
+        this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+          return docScoreB.value - docScoreA.value;
+        });
+        console.log(lDocScore);
+        var i = undefined;
+        for (i = 0; i < lDocScore.length; i++) {
+          if (this.tQRels.getQRel(topic).getRel(lDocScore[i].doc) < 0) {
+            break;
+          }
+        }
+        console.log(lDocScore[i].value);
+        return lDocScore[i].doc;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              i = 0;
+
+            case 3:
+              if (!(i < this.N.value / this.nQ)) {
+                context$2$0.next = 13;
+                break;
+              }
+
+              doc = this.getBestDocument(topic);
+
+              console.log(doc);
+              pooledDocument = this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 10;
+              return pooledDocument;
+
+            case 10:
+              i++;
+              context$2$0.next = 3;
+              break;
+
+            case 13:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return HedgeTakeN;
+  })(PoolingStrategy);
+
+  var MABRandomTakeN = (function (_PoolingStrategy5) {
+    _inherits(MABRandomTakeN, _PoolingStrategy5);
+
+    function MABRandomTakeN() {
+      _classCallCheck(this, MABRandomTakeN);
+
+      _get(Object.getPrototypeOf(MABRandomTakeN.prototype), "constructor", this).call(this);
+      this.name = "MABRandomTake@N";
+      //parameters
+      this.N = new N(10000);
+      this.nQ = 0;
+
+      this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
+      this.mLNumRuns = {};
+      this.mMaxRunsId = {};
+    }
+
+    _createClass(MABRandomTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "getNextDocument",
+      value: function getNextDocument(topic) {
+        if (!this.gens[topic]) {
+          this.gens[topic] = this.genPool(topic);
+        }
+        var doc = this.gens[topic].next();
+        console.log(doc);
+        return doc;
+      }
+    }, {
+      key: "shuffle",
+      value: function shuffle(array) {
+        var currentIndex = array.length,
+            tempValue = undefined,
+            randomIndex = undefined;
+        while (0 !== currentIndex) {
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex -= 1;
+          tempValue = array[currentIndex];
+          array[currentIndex] = array[randomIndex];
+          array[randomIndex] = tempValue;
+        }
+        return array;
+      }
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        if (!this.mLNumRuns[topic]) {
+          this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
+        }
+        var lNumRuns = this.mLNumRuns[topic];
+        var runsIndexes = [];
+        for (var i = 0; i < this.lRuns.length; i++) {
+          runsIndexes.push(i);
+        }
+        runsIndexes = this.shuffle(runsIndexes);
+        console.log(runsIndexes);
+        var maxRunsId = runsIndexes[0];
+        while (lNumRuns[maxRunsId] === this.lRuns[maxRunsId].mRun[topic].lRunRecord.length) {
+          runsIndexes = this.shuffle(runsIndexes);
+          console.log(runsIndexes);
+          maxRunsId = runsIndexes[0];
+        }
+
+        this.mMaxRunsId[topic] = maxRunsId;
         var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
         lNumRuns[maxRunsId]++;
         return res;
@@ -3486,10 +4336,553 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       })
     }]);
 
-    return MTFTakeN;
+    return MABRandomTakeN;
+  })(PoolingStrategy);
+
+  var MABGreedyTakeN = (function (_PoolingStrategy6) {
+    _inherits(MABGreedyTakeN, _PoolingStrategy6);
+
+    function MABGreedyTakeN() {
+      _classCallCheck(this, MABGreedyTakeN);
+
+      _get(Object.getPrototypeOf(MABGreedyTakeN.prototype), "constructor", this).call(this);
+      this.name = "MABGreedyTake@N";
+      //parameters
+      this.N = new N(10000);
+      this.C0 = new C0(0.1);
+      this.C1 = new C1(0.01);
+      this.nQ = 0;
+      this.mN = {};
+      this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
+      this.mLNumRuns = {};
+      this.mMaxRunsId = {};
+    }
+
+    _createClass(MABGreedyTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.C0, this.C1, this.N];
+      }
+    }, {
+      key: "getNextDocument",
+      value: function getNextDocument(topic) {
+        if (!this.gens[topic]) {
+          this.gens[topic] = this.genPool(topic);
+        }
+        var doc = this.gens[topic].next();
+        console.log(doc);
+        return doc;
+      }
+    }, {
+      key: "shuffle",
+      value: function shuffle(array) {
+        var rand = undefined,
+            index = -1,
+            length = array.length,
+            result = Array(length);
+        while (++index < length) {
+          rand = Math.floor(Math.random() * (index + 1));
+          result[index] = result[rand];
+          result[rand] = array[index];
+        }
+        return result;
+      }
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        if (!this.mN[topic]) {
+          this.mN[topic] = 0;
+        }
+        this.mN[topic]++;
+        if (!this.mLNumRuns[topic]) {
+          this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
+        }
+        var lNumRuns = this.mLNumRuns[topic];
+        var maxRunsId = undefined;
+        var threshold = Math.min(1, this.C0.value * this.lRuns.length / Math.pow(this.C1.value, 2) / this.mN[topic]);
+        if (Math.random() < threshold) {
+          var is = [];
+          for (var i = 0; i < this.lRuns.length; i++) {
+            is.push(i);
+          }
+          maxRunsId = this.shuffle(is)[0];
+        } else {
+          var mRunsScores = {};
+          for (var i = 0; i < this.lRuns.length; i++) {
+            mRunsScores[this.lRuns[i].id] = 0;
+            for (var j = 0; j < lNumRuns[i]; j++) {
+              if (this.tQRels.getQRel(topic).getRel(this.lRuns[i].mRun[topic].lRunRecord[j].doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.RELEVANT) {
+                mRunsScores[this.lRuns[i].id]++;
+              }
+            }
+            mRunsScores[this.lRuns[i].id] /= lNumRuns[this.lRuns[i].id];
+          }
+          console.log(mRunsScores);
+          var maxValue = -Infinity;
+          for (var i = 0; i < Object.values(mRunsScores).length; i++) {
+            if (Object.values(mRunsScores)[i] > maxValue && lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
+              maxValue = Object.values(mRunsScores)[i];
+              maxRunsId = i;
+            }
+          }
+        }
+        this.mMaxRunsId[topic] = maxRunsId;
+        maxRunsId = this.mMaxRunsId[topic];
+        var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
+        lNumRuns[maxRunsId]++;
+        return res;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              i = 0;
+
+            case 4:
+              if (!(i < this.N.value / this.nQ)) {
+                context$2$0.next = 17;
+                break;
+              }
+
+              doc = this.getBestDocument(topic);
+
+              while (this.tQRels.getQRel(topic).getRel(doc) !== _visualPoolComponentsUploadQrels.EnumPooledDocumentState.UNSELECTED) {
+                doc = this.getBestDocument(topic);
+              }
+              console.log(doc);
+
+              if (docs.has(doc)) {
+                context$2$0.next = 14;
+                break;
+              }
+
+              docs.add(doc);
+              pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 14;
+              return pooledDocument;
+
+            case 14:
+              i++;
+              context$2$0.next = 4;
+              break;
+
+            case 17:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return MABGreedyTakeN;
+  })(PoolingStrategy);
+
+  var MABUCBTakeN = (function (_PoolingStrategy7) {
+    _inherits(MABUCBTakeN, _PoolingStrategy7);
+
+    function MABUCBTakeN() {
+      _classCallCheck(this, MABUCBTakeN);
+
+      _get(Object.getPrototypeOf(MABUCBTakeN.prototype), "constructor", this).call(this);
+      this.name = "MABUCBTake@N";
+      //parameters
+      this.N = new N(10000);
+      this.nQ = 0;
+      this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
+      this.mLNumRuns = {};
+      this.mMaxRunsId = {};
+      this.mN = {};
+    }
+
+    _createClass(MABUCBTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "getNextDocument",
+      value: function getNextDocument(topic) {
+        if (!this.gens[topic]) {
+          this.gens[topic] = this.genPool(topic);
+        }
+        var doc = this.gens[topic].next();
+        console.log(doc);
+        return doc;
+      }
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        if (!this.mN[topic]) {
+          this.mN[topic] = 0;
+        }
+        this.mN[topic]++;
+        if (!this.mLNumRuns[topic]) {
+          this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
+        }
+        var lNumRuns = this.mLNumRuns[topic];
+        console.log(lNumRuns);
+        var maxRunsId = undefined;
+        var isOne = -1;
+        for (var i = 0; i < lNumRuns.length; i++) {
+          if (lNumRuns[i] === 0) {
+            isOne = i;
+            break;
+          }
+        }
+        if (isOne >= 0) {
+          maxRunsId = isOne;
+        } else {
+          var mRunsScores = {};
+          for (var i = 0; i < this.lRuns.length; i++) {
+            mRunsScores[this.lRuns[i].id] = 0;
+            var sum1 = 0;
+            var sum2 = 0;
+            for (var j = 0; j < lNumRuns[i]; j++) {
+              if (this.tQRels.getQRel(topic).getRel(this.lRuns[i].mRun[topic].lRunRecord[j].doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.RELEVANT) {
+                mRunsScores[this.lRuns[i].id]++;
+                sum1 += mRunsScores[this.lRuns[i].id] / (j + 1);
+                sum2 += mRunsScores[this.lRuns[i].id] / (j + 1) * mRunsScores[this.lRuns[i].id] / (j + 1);
+              }
+            }
+            sum1 /= lNumRuns[i];
+            sum2 = sum2 / lNumRuns[i] - sum1 * sum1;
+            /*console.log("ciao");
+            console.log(this.lRuns[i].id);
+            console.log(sum1);
+            console.log(sum2);
+            console.log(lNumRuns[i]);
+            console.log(mRunsScores[this.lRuns[i].id]);*/
+            mRunsScores[this.lRuns[i].id] = sum1 + Math.sqrt(Math.log(this.mN[topic]) / lNumRuns[i] * Math.min(1 / 4, sum2) + Math.sqrt(2 * Math.log(this.mN[topic]) / lNumRuns[i]));
+          }
+          console.log(mRunsScores);
+
+          var maxValue = -Infinity;
+          for (var i = 0; i < Object.values(mRunsScores).length; i++) {
+            if (Object.values(mRunsScores)[i] > maxValue && lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
+              maxValue = Object.values(mRunsScores)[i];
+              maxRunsId = i;
+            }
+          }
+        }
+        this.mMaxRunsId[topic] = maxRunsId;
+        var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
+        lNumRuns[maxRunsId]++;
+        return res;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              i = 0;
+
+            case 4:
+              if (!(i < this.N.value / this.nQ)) {
+                context$2$0.next = 17;
+                break;
+              }
+
+              doc = this.getBestDocument(topic);
+
+              while (this.tQRels.getQRel(topic).getRel(doc) !== _visualPoolComponentsUploadQrels.EnumPooledDocumentState.UNSELECTED) {
+                doc = this.getBestDocument(topic);
+              }
+              console.log(doc);
+
+              if (docs.has(doc)) {
+                context$2$0.next = 14;
+                break;
+              }
+
+              docs.add(doc);
+              pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 14;
+              return pooledDocument;
+
+            case 14:
+              i++;
+              context$2$0.next = 4;
+              break;
+
+            case 17:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return MABUCBTakeN;
+  })(PoolingStrategy);
+
+  var MABBetaTakeN = (function (_PoolingStrategy8) {
+    _inherits(MABBetaTakeN, _PoolingStrategy8);
+
+    function MABBetaTakeN() {
+      _classCallCheck(this, MABBetaTakeN);
+
+      _get(Object.getPrototypeOf(MABBetaTakeN.prototype), "constructor", this).call(this);
+      this.name = "MABBetaTake@N";
+      //parameters
+      this.N = new N(10000);
+      this.nQ = 0;
+      this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
+      this.mLNumRuns = {};
+      this.mMaxRunsId = {};
+    }
+
+    _createClass(MABBetaTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "getNextDocument",
+      value: function getNextDocument(topic) {
+        if (!this.gens[topic]) {
+          this.gens[topic] = this.genPool(topic);
+        }
+        var doc = this.gens[topic].next();
+        console.log(doc);
+        return doc;
+      }
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        if (!this.mLNumRuns[topic]) {
+          this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
+        }
+        var lNumRuns = this.mLNumRuns[topic];
+        console.log(lNumRuns);
+        var maxRunsId = undefined;
+        var mRunsScores = {};
+        for (var i = 0; i < this.lRuns.length; i++) {
+          mRunsScores[this.lRuns[i].id] = 0;
+          for (var j = 0; j < lNumRuns[i]; j++) {
+            if (this.tQRels.getQRel(topic).getRel(this.lRuns[i].mRun[topic].lRunRecord[j].doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.RELEVANT) {
+              mRunsScores[this.lRuns[i].id]++;
+            }
+          }
+          mRunsScores[this.lRuns[i].id] = jStat.beta.sample(1 + mRunsScores[this.lRuns[i].id], 1 + lNumRuns[i] - mRunsScores[this.lRuns[i].id]);
+        }
+        console.log(mRunsScores);
+
+        var maxValue = -Infinity;
+        for (var i = 0; i < Object.values(mRunsScores).length; i++) {
+          if (Object.values(mRunsScores)[i] > maxValue && lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
+            maxValue = Object.values(mRunsScores)[i];
+            maxRunsId = i;
+          }
+        }
+        this.mMaxRunsId[topic] = maxRunsId;
+        maxRunsId = this.mMaxRunsId[topic];
+        var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
+        lNumRuns[maxRunsId]++;
+        return res;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              i = 0;
+
+            case 4:
+              if (!(i < this.N.value / this.nQ)) {
+                context$2$0.next = 17;
+                break;
+              }
+
+              doc = this.getBestDocument(topic);
+
+              while (this.tQRels.getQRel(topic).getRel(doc) !== _visualPoolComponentsUploadQrels.EnumPooledDocumentState.UNSELECTED) {
+                doc = this.getBestDocument(topic);
+              }
+              console.log(doc);
+
+              if (docs.has(doc)) {
+                context$2$0.next = 14;
+                break;
+              }
+
+              docs.add(doc);
+              pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 14;
+              return pooledDocument;
+
+            case 14:
+              i++;
+              context$2$0.next = 4;
+              break;
+
+            case 17:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return MABBetaTakeN;
+  })(PoolingStrategy);
+
+  var MABMaxMeanTakeN = (function (_PoolingStrategy9) {
+    _inherits(MABMaxMeanTakeN, _PoolingStrategy9);
+
+    function MABMaxMeanTakeN() {
+      _classCallCheck(this, MABMaxMeanTakeN);
+
+      _get(Object.getPrototypeOf(MABMaxMeanTakeN.prototype), "constructor", this).call(this);
+      this.name = "MABMaxMeanTake@N";
+      //parameters
+      this.N = new N(10000);
+      this.nQ = 0;
+      this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
+      this.mLNumRuns = {};
+      this.mMaxRunsId = {};
+    }
+
+    _createClass(MABMaxMeanTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "getNextDocument",
+      value: function getNextDocument(topic) {
+        if (!this.gens[topic]) {
+          this.gens[topic] = this.genPool(topic);
+        }
+        var doc = this.gens[topic].next();
+        console.log(doc);
+        return doc;
+      }
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        if (!this.mLNumRuns[topic]) {
+          this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
+        }
+        var lNumRuns = this.mLNumRuns[topic];
+        console.log(lNumRuns);
+        var maxRunsId = undefined;
+        var mRunsScores = {};
+        for (var i = 0; i < this.lRuns.length; i++) {
+          mRunsScores[this.lRuns[i].id] = 0;
+          for (var j = 0; j < lNumRuns[i]; j++) {
+            if (this.tQRels.getQRel(topic).getRel(this.lRuns[i].mRun[topic].lRunRecord[j].doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.RELEVANT) {
+              mRunsScores[this.lRuns[i].id]++;
+            }
+          }
+          mRunsScores[this.lRuns[i].id] = (1 + mRunsScores[this.lRuns[i].id]) / (2 + lNumRuns[i] - mRunsScores[this.lRuns[i].id]);
+        }
+        console.log(mRunsScores);
+
+        var maxValue = -Infinity;
+        for (var i = 0; i < Object.values(mRunsScores).length; i++) {
+          if (Object.values(mRunsScores)[i] > maxValue && lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
+            maxValue = Object.values(mRunsScores)[i];
+            maxRunsId = i;
+          }
+        }
+        this.mMaxRunsId[topic] = maxRunsId;
+        var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
+        lNumRuns[maxRunsId]++;
+        return res;
+      }
+    }, {
+      key: "genPool",
+      value: regeneratorRuntime.mark(function genPool(topic) {
+        var docs, i, doc, pooledDocument;
+        return regeneratorRuntime.wrap(function genPool$(context$2$0) {
+          while (1) switch (context$2$0.prev = context$2$0.next) {
+            case 0:
+              if (this.nQ === 0) {
+                this.nQ = this.numberOfTopics();
+              }
+              if (!this.tDocs[topic]) {
+                this.tDocs[topic] = new Set();
+              }
+              docs = this.tDocs[topic];
+              i = 0;
+
+            case 4:
+              if (!(i < this.N.value / this.nQ)) {
+                context$2$0.next = 17;
+                break;
+              }
+
+              doc = this.getBestDocument(topic);
+
+              while (this.tQRels.getQRel(topic).getRel(doc) !== _visualPoolComponentsUploadQrels.EnumPooledDocumentState.UNSELECTED) {
+                doc = this.getBestDocument(topic);
+              }
+              console.log(doc);
+
+              if (docs.has(doc)) {
+                context$2$0.next = 14;
+                break;
+              }
+
+              docs.add(doc);
+              pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
+
+              this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
+              context$2$0.next = 14;
+              return pooledDocument;
+
+            case 14:
+              i++;
+              context$2$0.next = 4;
+              break;
+
+            case 17:
+            case "end":
+              return context$2$0.stop();
+          }
+        }, genPool, this);
+      })
+    }]);
+
+    return MABMaxMeanTakeN;
   })(PoolingStrategy);
 });
 //THIS IS A PROBLEM YOU SHOULD CREATE IF IT DOES NOT EXIST
+//this.getPooledDocument(doc, this.qRels.getQRel(topic));
 define('visual-pool/initializers/runs', ['exports', 'ember'], function (exports, _ember) {
   exports.initialize = initialize;
 
@@ -3567,12 +4960,15 @@ define("visual-pool/router", ["exports", "ember", "visual-pool/config/environmen
   Router.map(function () {
     this.route('about');
     this.route('contact');
-    this.route('poolingmethod');
+    this.route('app');
   });
 
   exports["default"] = Router;
 });
 define("visual-pool/routes/about", ["exports", "ember"], function (exports, _ember) {
+  exports["default"] = _ember["default"].Route.extend({});
+});
+define("visual-pool/routes/app", ["exports", "ember"], function (exports, _ember) {
   exports["default"] = _ember["default"].Route.extend({});
 });
 define("visual-pool/routes/contact", ["exports", "ember"], function (exports, _ember) {
@@ -3582,12 +4978,9 @@ define("visual-pool/routes/index", ["exports", "ember"], function (exports, _emb
   exports["default"] = _ember["default"].Route.extend({
     beforeModel: function beforeModel() {
       this._super.apply(this, arguments);
-      this.replaceWith('poolingmethod');
+      this.replaceWith('app');
     }
   });
-});
-define("visual-pool/routes/poolingmethod", ["exports", "ember"], function (exports, _ember) {
-  exports["default"] = _ember["default"].Route.extend({});
 });
 define('visual-pool/services/ajax', ['exports', 'ember-ajax/services/ajax'], function (exports, _emberAjaxServicesAjax) {
   Object.defineProperty(exports, 'default', {
@@ -3617,8 +5010,8 @@ define("visual-pool/templates/about", ["exports"], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 9,
-            "column": 6
+            "line": 292,
+            "column": 0
           }
         },
         "moduleName": "visual-pool/templates/about.hbs"
@@ -3631,25 +5024,170 @@ define("visual-pool/templates/about", ["exports"], function (exports) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
         dom.setAttribute(el1, "class", "jumbo");
-        var el2 = dom.createTextNode("\n    ");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "right tomster");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n    ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("h2");
-        var el3 = dom.createTextNode("About Super Rentals");
+        dom.setAttribute(el2, "class", "row");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-1 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-9 text-justify");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("h1");
+        var el5 = dom.createTextNode("Visual Pool: A Tool to Visualize and Interact with the Pooling Method");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-2 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n    ");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
-        var el2 = dom.createElement("p");
-        var el3 = dom.createTextNode("\n        The Super Rentals website is a delightful project created to explore Ember.\n        By building a property rental site, we can simultaneously imagine traveling\n        AND building Ember applications.\n    ");
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "row");
+        var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-1 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-9 text-justify");
+        var el4 = dom.createTextNode("\n      Every year more than 25 test collections are built among the main Information\n      Retrieval (IR) evaluation campaigns. They are extremely\n      important in IR because they become the evaluation praxis for the\n      forthcoming years. Test collections are built mostly using the pooling\n      method. The main advantage of this method is that it drastically\n      reduces the number of documents to be judged. It does so at the\n      cost of introducing biases, which are sometimes aggravated by non\n      optimal configuration. Here, we develop a novel visualization\n      technique for the pooling method, and integrate it in this demo\n      application named Visual Pool. This demo application enables the\n      user to interact with the pooling method with ease, and develops\n      visual hints in order to analyze existing test collections, and build\n      better ones.\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-2 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "row");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-1 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-9 text-justify");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("h2");
+        var el5 = dom.createTextNode("Introduction");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-2 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "row");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-1 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-9 text-justify");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("p");
+        var el5 = dom.createTextNode("\n        Test collection based evaluation in IR is a cornerstone of the IR\n        experimentation. Most often, test collections are built using the\n        pooling method. This method refers to a sampling procedure, according\n        to a given strategy, of documents to be judged. This demo\n        aims to visualize this procedure, allowing the user deeper insights.");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("p");
+        var el5 = dom.createTextNode("\n        A test collection is composed of a collection of documents, a set\n        of topics, and a set of relevance judgements. A relevance judgment\n        (or qrel) expresses the relevance of a document for a given topic.\n        Due to the size of the modern collection of documents, to produce a\n        complete set of relevance judgements is impossible. For example, if\n        we examine what today would be considered a small test collection,\n        with 500,000 documents and 50 topics (approximately the size of the\n        TREC Ad Hoc 8 test collection [16]), the total relevance judgments\n        to be made would be 25 × 106. At an optimistic rate of 120 seconds\n        per judgment, this represents the equivalent of around 400 years of\n        work for one person [4]. To solve this problem, early in the modern\n        IR history, a sampling method was developed, the pooling method\n        [14].");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("p");
+        var el5 = dom.createTextNode("\n        The pooling method consists in building a test collection by\n        using the results provided by a set of search engines. These are\n        usually systems designed by participants of challenges organized\n        by IR evaluation campaigns such as: TREC, CLEF, NTCIR, or FIRE.\n        In these challenges, every participant is provided a collection of\n        documents and a set of topics. Their task is to develop a search\n        engine to produce a result that maximizes the goal dened by the\n        challenge. This result is then sent to the organizers, who now have\n        everything they need to implement a pooling strategy.");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("p");
+        var el5 = dom.createTextNode("\n        The most common pooling strategy is the ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("i");
+        var el6 = dom.createTextNode("Depth@K");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode(" strategy.\n        This consists of creating a pool by selecting the top K documents\n        from the results submitted by each system of each participant. The\n        pool is given to the relevance assessors, who will produce a set of\n        relevance assessments, which are then used in combination with\n        an IR evaluation measure to rank the performance of the systems\n        of the participants. These test collections are then used later by\n        researchers to evaluate their systems. However, when comparing a\n        new system with the search engines that participated in the challenge,\n        the pooled systems have an advantage given by the guarantee\n        that at least their top K documents have been judged, while for the\n        new system this guarantee does not exist. This effect goes under\n        the name of pool bias, which manifests itself when the evaluated\n        system retrieves documents that will never be considered relevant\n        [5] because they had never been seen by the human assessors.");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("p");
+        var el5 = dom.createTextNode("\n        This bias can be mitigated by increasing: 1) the depth of the\n        pool, which decreases the probability of retrieving a non-judged\n        document; 2) the number of topics, which reduces the variability of\n        the bias making it easier to correct; and, 3) the number (assumed\n        to be proportional to the variety) of the submitted results by the\n        participants, which leads to a better exploration of the information\n        space. However, all of these solutions result in a mere increase of\n        the number of documents to be judged and therefore in an increase\n        of the cost of the test collection. The research in the IR community\n        to reduce the pool bias has branched out into two directions: (a)\n        identifying a pooling strategy and a set of parameters that manifests\n        a lower bias, and (b) estimating the bias to correct the score\n        obtained by the search engine. The former direction has lead to\n        the development of new pooling strategies [7, 10, 11], the latter\n        instead to the development of new pool bias estimators [6, 8, 9].\n        Moreover, a hybrid approach has been also explored developing\n        IR evaluation measures in combination with pooling strategies in\n        order to minimize the pool bias [15, 17].");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("p");
+        var el5 = dom.createTextNode("\n        In this paper we present a demo that enables the user to visualize\n        and interact with the pooling method. This demo addresses the\n        needs of four classes of users: test collection builders, researchers,\n        lecturers, and students. This solution aims to, by exploiting the\n        users’ sight, develop visual cues to guide the development of more\n        sophisticated analyses. This solution is open source (MIT licensed)\n        and is available in this GitHub ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("a");
+        var el6 = dom.createTextNode("repository");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode(".\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-2 text-right");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createComment("\n  <div class=\"row\">\n    <div class=\"col-md-1 text-right\"></div>\n    <div class=\"col-md-9 text-justify\">\n      <h2>Visual Pool</h2>\n    </div>\n    <div class=\"col-md-2 text-right\"></div>\n  </div>\n  <p>\n    Visual Pool gives its users a new perspective over the pooling\n    method, integrating a novel information visualization technique.\n    This section is divided into three parts: we rst present our pooling\n    visualization technique, then we explain how this is integrated into\n    the demo application, and we conclude listing the features of the\n    demo. The authors have not found any solution that addresses a\n    similar issue, which makes this solution unique in its kind.\n    In Figure 1 we see an example of the pool visualization technique.\n    In this case we have applied a Depth@K pooling strategy. On the\n    le, the run view highlights how the documents are distributed\n    among the runs. On the center, the unique documents runs view\n    where all the duplicated documents retrieved at a lower rank are\n    removed. On the right, the pool view shows the distribution of\n    unique documents at varying of the rank.</p>\n  <img src=\"/assets/images/Fig1.png\" class=\"img-responsive\" style=\"max-width: 30%\" alt=\"Responsive image\">\n  <p>In Figure 2 we show a screen-shot of the Visual Pool application.\n    In this user interface we identify the following sections (the\n    numbers correspond to those in the Figure):\n  </p>\n  <ol>\n    <li>Pooling Strategy Selection and Conguration. We can select\n      the pooling strategy among the 22 implemented. Every\n      pooling strategy is congurable, if needed.\n    </li>\n    <li>Visualization Control. We can select which topic to visualize,\n      and we can control which pool visualization view to\n      display: run, unique documents runs, or pool.\n    </li>\n    <li>Pool Strategy Control. We can control the progress of the\n      pooling strategy. We can here decide if to step the pooling\n      strategy forward by one document or till the end, for the\n      current topic, or for all the topics.\n    </li>\n    <li>Visualization. We visualize the pool using the previously\n      described visualization technique.\n    </li>\n    <li>Analytics. We have a set of analytics that show statistics\n      about the pool and display the current status of the pooling\n      strategy.\n    </li>\n    <li>Log. The log of the pooling strategy is displayed, where we\n      show the status of the processed documents.\n    </li>\n    <li>Run/QRels upload. We can upload the set of runs to be\n      analyzed. It is possible also to indicate at which size to cut\n      the runs. When an existing test collection is to be analyzed,\n      we can also upload the set of relevance assessments, which\n      will be used to visualize the process of assessment.\n    </li>\n    <li>QRels download. We can download the current qrels le,\n      e.g. the current set of relevance assessments as generated\n      by the pooling strategy.\n    </li>\n  </ol>\n  <p>\n    In summary, here we list all the features implemented in the\n    version of the demo presented at SIGIR:</p>\n  <ul>\n    <li>Load runs les in TREC format with a given size;</li>\n    <li>Load a qrels le in TREC format;</li>\n    <li>Select a pooling strategy and congure its parameters;</li>\n    <li>Select which topic to visualize;</li>\n    <li>Control the progress of the pooling strategy;</li>\n    <li>Visualize the pool in three views: runs, unique documents\n      runs, or pool;\n    </li>\n    <li>Visualize the log of the progress of the pooling strategy;</li>\n    <li>Visualize the statistics about the pool and the status of the\n      pooling strategy.\n    </li>\n    <li> Save the progress of the pooling strategy as a qrels le in\n      TREC format;\n    </li>\n    <li> If required by the pooling strategy ask the user to judge a\n      document;\n    </li>\n    <li>Offer API for controlling the pooling strategy in order to\n      perform the judgment with an external application.\n    </li>\n  </ul>\n\n  <p>In Table 1 are listed all the pooling strategies already implemented\n    in the demo.</p>\n\n  <h2>Use Cases</h2>\n  <p>In this section we present three use cases that cover the main user\n    needs expressed by the four classes of users we aim to address. The\n    rst use case is about the visualization of an existing test collection.</p>\n  The second use case is about the analysis of a pooling strategy.\n  Finally, the third use case is about building a test collection.\n  <h3>Visualizing a Test Collection</h3>\n  <p>This use case addresses the needs of researchers when (a) interested\n    in checking the properties of a test collection, e.g. visualize the\n    pooled runs, assess the behavior of each topic, bias of the nonpooled\n    or new systems, or (b) interested in juxtaposing two or\n    more test collections to compare their properties.\n    For this use case, it is required from the user to provide as input\n    both the runs les and the qrels le. Then, select the pooling\n    strategy used to build the test collection, select the appropriate\n    parameters, and execute the pooling strategy. Now, the application\n    will display a visualization similar to Figure 1, where the user\n    can select dynamically which view, and topic to visualize. When\n    multiple test collections are to be compared, the user can repeat\n    the process with a new instance of the application for each test\n    collection.</p>\n  <h3>Analyzing of a Pooling Strategy</h3>\n  <p>This use case addresses the needs of lecturers to help them explain\n    the pooling method to students, and to address the needs of students\n    to better understand the algorithm. However, also researchers\n    benet from this use case, e.g. when interested in juxtaposing the\n    results obtained with different pooling strategies.\n    For this use case, it is required from the user to provide as input\n    both the runs les and the qrels le. Then, the user can select a\n    pooling strategy to be analyzed, and configure it. Now, the application\n    of the pooling strategy can be controlled by the controllers\n    in the pooling controller section that allows the user to follow the\n    pooling strategy at her/his own pace. To compare different pooling\n    strategies, the user can repeat the process with a new instance of\n    the application for each pooling strategy</p>\n  <h3>Building a Test Collection</h3>\n  <p>This use case addresses the needs of a test collection builder to\n    help them control the assessments of the selected documents using\n    the application as a dashboard. This is achieved by making use\n    of the API offered by the application, which allows a third party\n    application to query the application about which document should\n    be judged, and send a response back with the label.</p>\n  <p>\n    For this use case, it is required from the user to provide as input\n    the runs les, select a pooling strategy to be used, and congure\n    it. Then, generate a unique key that will be used by the third party\n    application to communicate with the application. At this point the\n    user is able to follow the judgment process on-line. The application\n    allows the user to change strategy if required, by downloading the\n    current qrels and giving them as input to a new instance of the\n    application.</p>\n  <h2>TECHNOLOGY</h2>\n  <p>This demo has been developed as a modern web application in\n    JavaScript for the front-end and Scala for the back-end. The frontend\n    is based on the web framework Ember.js1\n    , and on the visualization\n    library p5.js2\n    , which is based on the Processing3\n    language.\n    The back-end is based on the Play Framework4\n    and for in-memory\n    storage on Redis5\n    , which is required only to support the API module.</p>\n  <p>The input les to be provided to the application are based on\n    the de facto standard format of trec eval6\n    . The format is a nonbreakable\n    space separated le. In Table 2 we show the elds in\n    the correct order as they should be contained by a runs le, and in\n    Table 3 we show the same but for a qrels le. As indicated in the\n    tables, some of the elds are ignored because they are redundant.\n    The type String+ is a String type that does not contain spaces.</p>\n  <h2>DISCUSSION & CONCLUSION</h2>\n  <p>In this demo paper we have presented Visual Pool, an application to\n    help test collection builders, researchers, lecturers, and students to\n    visualize the pooling method. We believe that this technology will\n    have a commercial impact because it allows the building of more\n    ecient test collections but at the same cost, through the application\n    of more ecient pooling strategies. We also believe it will have\n    a research impact because it enables the analysis of new pooling\n    strategies. Finally, it will have an educational impact because it\n    supports lecturers in explaining and students in understanding the\n    pooling method.</p>\n    ");
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
         dom.appendChild(el1, el2);
+        dom.appendChild(el0, el1);
+        var el1 = dom.createTextNode("\n");
         dom.appendChild(el0, el1);
         return el0;
       },
@@ -3662,7 +5200,7 @@ define("visual-pool/templates/about", ["exports"], function (exports) {
     };
   })());
 });
-define("visual-pool/templates/application", ["exports"], function (exports) {
+define("visual-pool/templates/app", ["exports"], function (exports) {
   exports["default"] = Ember.HTMLBars.template((function () {
     var child0 = (function () {
       return {
@@ -3671,24 +5209,22 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 9,
-              "column": 18
+              "line": 10,
+              "column": 8
             },
             "end": {
               "line": 11,
-              "column": 18
+              "column": 8
             }
           },
-          "moduleName": "visual-pool/templates/application.hbs"
+          "moduleName": "visual-pool/templates/app.hbs"
         },
-        isEmpty: false,
+        isEmpty: true,
         arity: 0,
         cachedFragment: null,
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("                      Home\n");
-          dom.appendChild(el0, el1);
           return el0;
         },
         buildRenderNodes: function buildRenderNodes() {
@@ -3706,15 +5242,15 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 14,
-              "column": 18
+              "line": 11,
+              "column": 8
             },
             "end": {
-              "line": 16,
-              "column": 18
+              "line": 13,
+              "column": 8
             }
           },
-          "moduleName": "visual-pool/templates/application.hbs"
+          "moduleName": "visual-pool/templates/app.hbs"
         },
         isEmpty: false,
         arity: 0,
@@ -3722,49 +5258,20 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("                      About\n");
+          var el1 = dom.createTextNode("          ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createComment("");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
           dom.appendChild(el0, el1);
           return el0;
         },
-        buildRenderNodes: function buildRenderNodes() {
-          return [];
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(fragment, 1, 1, contextualElement);
+          return morphs;
         },
-        statements: [],
-        locals: [],
-        templates: []
-      };
-    })();
-    var child2 = (function () {
-      return {
-        meta: {
-          "revision": "Ember@2.9.1",
-          "loc": {
-            "source": null,
-            "start": {
-              "line": 19,
-              "column": 18
-            },
-            "end": {
-              "line": 21,
-              "column": 18
-            }
-          },
-          "moduleName": "visual-pool/templates/application.hbs"
-        },
-        isEmpty: false,
-        arity: 0,
-        cachedFragment: null,
-        hasRendered: false,
-        buildFragment: function buildFragment(dom) {
-          var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("                      Contact\n");
-          dom.appendChild(el0, el1);
-          return el0;
-        },
-        buildRenderNodes: function buildRenderNodes() {
-          return [];
-        },
-        statements: [],
+        statements: [["inline", "topic-selector", [], ["selectTopic", "selectTopic", "topics", ["subexpr", "@mut", [["get", "pool.lTopicPool", ["loc", [null, [12, 60], [12, 75]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [12, 10], [12, 77]]], 0, 0]],
         locals: [],
         templates: []
       };
@@ -3779,7 +5286,355 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 30,
+            "line": 61,
+            "column": 6
+          }
+        },
+        "moduleName": "visual-pool/templates/app.hbs"
+      },
+      isEmpty: false,
+      arity: 0,
+      cachedFragment: null,
+      hasRendered: false,
+      buildFragment: function buildFragment(dom) {
+        var el0 = dom.createDocumentFragment();
+        var el1 = dom.createElement("div");
+        dom.setAttribute(el1, "class", "row");
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "container col-md-8");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "row");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "col-md-9");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "col-md-2");
+        var el5 = dom.createTextNode("\n");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "col-md-1");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "row");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "col-md-12");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "col-md-2");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "container col-md-2");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "row");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "col-md-12");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "row");
+        dom.setAttribute(el3, "style", "margin-top:7px");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "col-md-12");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        dom.appendChild(el0, el1);
+        var el1 = dom.createTextNode("\n");
+        dom.appendChild(el0, el1);
+        var el1 = dom.createElement("div");
+        dom.setAttribute(el1, "class", "row");
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "col-md-8");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "col-md-2");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "col-md-2");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        dom.appendChild(el0, el1);
+        return el0;
+      },
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var element0 = dom.childAt(fragment, [0]);
+        var element1 = dom.childAt(element0, [1]);
+        var element2 = dom.childAt(element1, [1]);
+        var element3 = dom.childAt(element0, [5]);
+        var element4 = dom.childAt(fragment, [2]);
+        var morphs = new Array(10);
+        morphs[0] = dom.createMorphAt(dom.childAt(element2, [1]), 1, 1);
+        morphs[1] = dom.createMorphAt(dom.childAt(element2, [3]), 1, 1);
+        morphs[2] = dom.createMorphAt(dom.childAt(element2, [5]), 1, 1);
+        morphs[3] = dom.createMorphAt(dom.childAt(element1, [3, 1]), 1, 1);
+        morphs[4] = dom.createMorphAt(dom.childAt(element0, [3]), 1, 1);
+        morphs[5] = dom.createMorphAt(dom.childAt(element3, [1, 1]), 1, 1);
+        morphs[6] = dom.createMorphAt(dom.childAt(element3, [3, 1]), 1, 1);
+        morphs[7] = dom.createMorphAt(dom.childAt(element4, [1]), 1, 1);
+        morphs[8] = dom.createMorphAt(dom.childAt(element4, [3]), 1, 1);
+        morphs[9] = dom.createMorphAt(dom.childAt(element4, [5]), 1, 1);
+        return morphs;
+      },
+      statements: [["inline", "poolstrategy-selector", [], ["poolStrategies", ["subexpr", "@mut", [["get", "pool.lPoolStrategy", ["loc", [null, [6, 25], [6, 43]]], 0, 0, 0, 0]], [], [], 0, 0], "selected", ["subexpr", "@mut", [["get", "poolStrategySelected", ["loc", [null, [7, 19], [7, 39]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [5, 8], [7, 41]]], 0, 0], ["block", "if", [["get", "loading", ["loc", [null, [10, 14], [10, 21]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [10, 8], [13, 15]]]], ["inline", "canvas-visual-pool-view-selector", [], ["viewSelector", ["subexpr", "@mut", [["get", "viewSelector", ["loc", [null, [17, 23], [17, 35]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [16, 8], [17, 37]]], 0, 0], ["inline", "canvas-visual-pool", [], ["viewSelector", ["subexpr", "@mut", [["get", "viewSelector", ["loc", [null, [23, 23], [23, 35]]], 0, 0, 0, 0]], [], [], 0, 0], "topicSelected", ["subexpr", "@mut", [["get", "topicSelected", ["loc", [null, [24, 24], [24, 37]]], 0, 0, 0, 0]], [], [], 0, 0], "lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [25, 26], [25, 41]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [22, 8], [25, 43]]], 0, 0], ["inline", "poolstrategy-stats", [], ["topicSelected", ["subexpr", "@mut", [["get", "topicSelected", ["loc", [null, [31, 20], [31, 33]]], 0, 0, 0, 0]], [], [], 0, 0], "lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [32, 22], [32, 37]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [30, 4], [32, 39]]], 0, 0], ["inline", "poolstrategy-player", [], ["stepForward", "stepForward", "fastForward", "fastForward"], ["loc", [null, [37, 8], [39, 37]]], 0, 0], ["inline", "poolstrategy-log", [], ["lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [45, 26], [45, 41]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [44, 8], [45, 43]]], 0, 0], ["inline", "upload-runs", [], ["updateTopicSelector", "updateTopicSelector"], ["loc", [null, [52, 4], [52, 61]]], 0, 0], ["content", "upload-qrels", ["loc", [null, [55, 4], [55, 20]]], 0, 0, 0, 0], ["inline", "download-qrels", [], ["lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [59, 22], [59, 37]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [58, 4], [59, 39]]], 0, 0]],
+      locals: [],
+      templates: [child0, child1]
+    };
+  })());
+});
+define("visual-pool/templates/application", ["exports"], function (exports) {
+  exports["default"] = Ember.HTMLBars.template((function () {
+    var child0 = (function () {
+      return {
+        meta: {
+          "revision": "Ember@2.9.1",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 5,
+              "column": 8
+            },
+            "end": {
+              "line": 7,
+              "column": 8
+            }
+          },
+          "moduleName": "visual-pool/templates/application.hbs"
+        },
+        isEmpty: false,
+        arity: 0,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("          ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("a");
+          var el2 = dom.createTextNode("Visual Pool");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var element2 = dom.childAt(fragment, [1]);
+          var morphs = new Array(1);
+          morphs[0] = dom.createAttrMorph(element2, 'href');
+          return morphs;
+        },
+        statements: [["attribute", "href", ["concat", [["get", "view.href", ["loc", [null, [6, 21], [6, 30]]], 0, 0, 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0]],
+        locals: [],
+        templates: []
+      };
+    })();
+    var child1 = (function () {
+      return {
+        meta: {
+          "revision": "Ember@2.9.1",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 8,
+              "column": 8
+            },
+            "end": {
+              "line": 10,
+              "column": 8
+            }
+          },
+          "moduleName": "visual-pool/templates/application.hbs"
+        },
+        isEmpty: false,
+        arity: 0,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("          ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("a");
+          var el2 = dom.createTextNode("About");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var element1 = dom.childAt(fragment, [1]);
+          var morphs = new Array(1);
+          morphs[0] = dom.createAttrMorph(element1, 'href');
+          return morphs;
+        },
+        statements: [["attribute", "href", ["concat", [["get", "view.href", ["loc", [null, [9, 21], [9, 30]]], 0, 0, 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0]],
+        locals: [],
+        templates: []
+      };
+    })();
+    var child2 = (function () {
+      return {
+        meta: {
+          "revision": "Ember@2.9.1",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 11,
+              "column": 8
+            },
+            "end": {
+              "line": 13,
+              "column": 8
+            }
+          },
+          "moduleName": "visual-pool/templates/application.hbs"
+        },
+        isEmpty: false,
+        arity: 0,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("          ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("a");
+          var el2 = dom.createTextNode("Contact");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var element0 = dom.childAt(fragment, [1]);
+          var morphs = new Array(1);
+          morphs[0] = dom.createAttrMorph(element0, 'href');
+          return morphs;
+        },
+        statements: [["attribute", "href", ["concat", [["get", "view.href", ["loc", [null, [12, 21], [12, 30]]], 0, 0, 0, 0]], 0, 0, 0, 0, 0], 0, 0, 0, 0]],
+        locals: [],
+        templates: []
+      };
+    })();
+    return {
+      meta: {
+        "revision": "Ember@2.9.1",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 21,
             "column": 6
           }
         },
@@ -3793,72 +5648,34 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("nav");
         dom.setAttribute(el1, "class", "navbar navbar-inverse navbar-static-top");
-        var el2 = dom.createTextNode("\n    ");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
         dom.setAttribute(el2, "class", "container-fluid");
-        var el3 = dom.createTextNode("\n        ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "navbar-header");
-        var el4 = dom.createTextNode("\n            ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("a");
-        dom.setAttribute(el4, "href", "#");
-        dom.setAttribute(el4, "class", "navbar-brand");
-        var el5 = dom.createTextNode("Visual Pool");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n        ");
+        var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
         var el3 = dom.createElement("div");
         dom.setAttribute(el3, "id", "navbar");
         dom.setAttribute(el3, "class", "collapse navbar-collapse");
-        var el4 = dom.createTextNode("\n            ");
+        var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("ul");
         dom.setAttribute(el4, "class", "nav navbar-nav");
-        var el5 = dom.createTextNode("\n                ");
+        var el5 = dom.createTextNode("\n");
         dom.appendChild(el4, el5);
-        var el5 = dom.createElement("li");
-        dom.setAttribute(el5, "class", "active");
-        var el6 = dom.createTextNode("\n");
-        dom.appendChild(el5, el6);
-        var el6 = dom.createComment("");
-        dom.appendChild(el5, el6);
-        var el6 = dom.createTextNode("                ");
-        dom.appendChild(el5, el6);
+        var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n                ");
+        var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
-        var el5 = dom.createElement("li");
-        var el6 = dom.createTextNode("\n");
-        dom.appendChild(el5, el6);
-        var el6 = dom.createComment("");
-        dom.appendChild(el5, el6);
-        var el6 = dom.createTextNode("                ");
-        dom.appendChild(el5, el6);
+        var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n                ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createElement("li");
-        var el6 = dom.createTextNode("\n");
-        dom.appendChild(el5, el6);
-        var el6 = dom.createComment("");
-        dom.appendChild(el5, el6);
-        var el6 = dom.createTextNode("                ");
-        dom.appendChild(el5, el6);
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n            ");
+        var el5 = dom.createTextNode("      ");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
+        var el4 = dom.createTextNode("\n    ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
+        var el3 = dom.createTextNode("\n  ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
@@ -3879,15 +5696,15 @@ define("visual-pool/templates/application", ["exports"], function (exports) {
         return el0;
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [0, 1, 3, 1]);
+        var element3 = dom.childAt(fragment, [0, 1, 1, 1]);
         var morphs = new Array(4);
-        morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]), 1, 1);
-        morphs[1] = dom.createMorphAt(dom.childAt(element0, [3]), 1, 1);
-        morphs[2] = dom.createMorphAt(dom.childAt(element0, [5]), 1, 1);
+        morphs[0] = dom.createMorphAt(element3, 1, 1);
+        morphs[1] = dom.createMorphAt(element3, 2, 2);
+        morphs[2] = dom.createMorphAt(element3, 3, 3);
         morphs[3] = dom.createMorphAt(dom.childAt(fragment, [2]), 1, 1);
         return morphs;
       },
-      statements: [["block", "link-to", ["index"], [], 0, null, ["loc", [null, [9, 18], [11, 30]]]], ["block", "link-to", ["about"], [], 1, null, ["loc", [null, [14, 18], [16, 30]]]], ["block", "link-to", ["contact"], [], 2, null, ["loc", [null, [19, 18], [21, 30]]]], ["content", "outlet", ["loc", [null, [29, 2], [29, 12]]], 0, 0, 0, 0]],
+      statements: [["block", "link-to", ["app"], ["tagName", "li"], 0, null, ["loc", [null, [5, 8], [7, 20]]]], ["block", "link-to", ["about"], ["tagName", "li"], 1, null, ["loc", [null, [8, 8], [10, 20]]]], ["block", "link-to", ["contact"], ["tagName", "li"], 2, null, ["loc", [null, [11, 8], [13, 20]]]], ["content", "outlet", ["loc", [null, [20, 2], [20, 12]]], 0, 0, 0, 0]],
       locals: [],
       templates: [child0, child1, child2]
     };
@@ -4442,18 +6259,7 @@ define("visual-pool/templates/components/poolstrategy-player", ["exports"], func
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n    ");
         dom.appendChild(el1, el2);
-        var el2 = dom.createElement("a");
-        dom.setAttribute(el2, "href", "#");
-        dom.setAttribute(el2, "class", "btn btn-default");
-        dom.setAttribute(el2, "role", "button");
-        var el3 = dom.createTextNode("\n        ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("span");
-        dom.setAttribute(el3, "class", "glyphicon glyphicon-pause");
-        dom.setAttribute(el3, "aria-hidden", "true");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
+        var el2 = dom.createComment("<a href=\"#\" class=\"btn btn-default\" role=\"button\">\n        <span class=\"glyphicon glyphicon-pause\" aria-hidden=\"true\"></span>\n    </a>!");
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
         dom.appendChild(el1, el2);
@@ -5148,7 +6954,7 @@ define("visual-pool/templates/contact", ["exports"], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 9,
+            "line": 43,
             "column": 6
           }
         },
@@ -5161,44 +6967,191 @@ define("visual-pool/templates/contact", ["exports"], function (exports) {
       buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
-        dom.setAttribute(el1, "class", "jumbo");
-        var el2 = dom.createTextNode("\n    ");
+        dom.setAttribute(el1, "class", "container");
+        var el2 = dom.createTextNode("\n  ");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "right tomster");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n    ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("h2");
-        var el3 = dom.createTextNode("Contact the Author");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n    ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("p");
+        dom.setAttribute(el2, "class", "page-header");
         var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("p");
-        var el4 = dom.createTextNode("Aldo Lipani");
+        var el3 = dom.createElement("h1");
+        var el4 = dom.createTextNode("Contact the Authors");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n  ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n  ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2, "class", "row");
+        dom.setAttribute(el2, "style", "margin-right: 15px; margin-left: 15px;");
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-4 m-b-lg");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "panel panel-default panel-profile m-b-0");
+        dom.setAttribute(el4, "style", "margin-right: 15px; margin-left: 15px;");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("div");
+        dom.setAttribute(el5, "class", "panel-heading");
+        dom.setAttribute(el5, "style", "height: 150px");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("div");
+        dom.setAttribute(el5, "class", "panel-body text-center");
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("img");
+        dom.setAttribute(el6, "class", "panel-profile-img");
+        dom.setAttribute(el6, "src", "/assets/images/Aldo_Lipani.jpg");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("h5");
+        dom.setAttribute(el6, "class", "panel-title");
+        var el7 = dom.createTextNode("Aldo Lipani");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("p");
+        dom.setAttribute(el6, "class", "m-b");
+        var el7 = dom.createTextNode("TU Wien");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("a");
+        dom.setAttribute(el6, "href", "http://aldolipani.com");
+        var el7 = dom.createTextNode("http://aldolipani.com");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n        ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
         var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("a");
-        dom.setAttribute(el3, "href", "http://aldolipani.com");
-        var el4 = dom.createTextNode("http://aldolipani.com");
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-4 m-b-lg");
+        var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("br");
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "panel panel-default panel-profile m-b-0");
+        dom.setAttribute(el4, "style", "margin-right: 15px; margin-left: 15px;");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("div");
+        dom.setAttribute(el5, "class", "panel-heading");
+        dom.setAttribute(el5, "style", "height: 150px");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("div");
+        dom.setAttribute(el5, "class", "panel-body text-center");
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("img");
+        dom.setAttribute(el6, "class", "panel-profile-img");
+        dom.setAttribute(el6, "src", "/assets/images/Mihai_Lupu.jpg");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("h5");
+        dom.setAttribute(el6, "class", "panel-title");
+        var el7 = dom.createTextNode("Mihai Lupu");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("p");
+        dom.setAttribute(el6, "class", "m-b");
+        var el7 = dom.createTextNode("TU Wien");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("a");
+        dom.setAttribute(el6, "href", "http://mihailupu.net");
+        var el7 = dom.createTextNode("http://mihailupu.net");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n        ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
+        dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
         var el3 = dom.createTextNode("\n    ");
         dom.appendChild(el2, el3);
-        var el3 = dom.createElement("a");
-        dom.setAttribute(el3, "href", "mailto:aldolipani@aldolipani.com");
-        var el4 = dom.createTextNode("aldolipani@aldolipani.com");
+        var el3 = dom.createElement("div");
+        dom.setAttribute(el3, "class", "col-md-4 m-b-lg");
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("div");
+        dom.setAttribute(el4, "class", "panel panel-default panel-profile m-b-0");
+        dom.setAttribute(el4, "style", "margin-right: 15px; margin-left: 15px;");
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("div");
+        dom.setAttribute(el5, "class", "panel-heading");
+        dom.setAttribute(el5, "style", "height: 150px");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n        ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createElement("div");
+        dom.setAttribute(el5, "class", "panel-body text-center");
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("img");
+        dom.setAttribute(el6, "class", "panel-profile-img");
+        dom.setAttribute(el6, "src", "/assets/images/Allan_Hanbury.jpg");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("h5");
+        dom.setAttribute(el6, "class", "panel-title");
+        var el7 = dom.createTextNode("Allan Hanbury");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("p");
+        dom.setAttribute(el6, "class", "m-b");
+        var el7 = dom.createTextNode("TU Wien");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n          ");
+        dom.appendChild(el5, el6);
+        var el6 = dom.createElement("a");
+        dom.setAttribute(el6, "href", "http://allan.hanbury.eu");
+        var el7 = dom.createTextNode("http://allan.hanbury.eu");
+        dom.appendChild(el6, el7);
+        dom.appendChild(el5, el6);
+        var el6 = dom.createTextNode("\n        ");
+        dom.appendChild(el5, el6);
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode("\n      ");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n    ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
+        var el3 = dom.createTextNode("\n  ");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
@@ -5826,296 +7779,6 @@ define("visual-pool/templates/messages/isitrelevant", ["exports"], function (exp
     };
   })());
 });
-define("visual-pool/templates/poolingmethod", ["exports"], function (exports) {
-  exports["default"] = Ember.HTMLBars.template((function () {
-    var child0 = (function () {
-      return {
-        meta: {
-          "revision": "Ember@2.9.1",
-          "loc": {
-            "source": null,
-            "start": {
-              "line": 10,
-              "column": 8
-            },
-            "end": {
-              "line": 11,
-              "column": 8
-            }
-          },
-          "moduleName": "visual-pool/templates/poolingmethod.hbs"
-        },
-        isEmpty: true,
-        arity: 0,
-        cachedFragment: null,
-        hasRendered: false,
-        buildFragment: function buildFragment(dom) {
-          var el0 = dom.createDocumentFragment();
-          return el0;
-        },
-        buildRenderNodes: function buildRenderNodes() {
-          return [];
-        },
-        statements: [],
-        locals: [],
-        templates: []
-      };
-    })();
-    var child1 = (function () {
-      return {
-        meta: {
-          "revision": "Ember@2.9.1",
-          "loc": {
-            "source": null,
-            "start": {
-              "line": 11,
-              "column": 8
-            },
-            "end": {
-              "line": 13,
-              "column": 8
-            }
-          },
-          "moduleName": "visual-pool/templates/poolingmethod.hbs"
-        },
-        isEmpty: false,
-        arity: 0,
-        cachedFragment: null,
-        hasRendered: false,
-        buildFragment: function buildFragment(dom) {
-          var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("          ");
-          dom.appendChild(el0, el1);
-          var el1 = dom.createComment("");
-          dom.appendChild(el0, el1);
-          var el1 = dom.createTextNode("\n");
-          dom.appendChild(el0, el1);
-          return el0;
-        },
-        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-          var morphs = new Array(1);
-          morphs[0] = dom.createMorphAt(fragment, 1, 1, contextualElement);
-          return morphs;
-        },
-        statements: [["inline", "topic-selector", [], ["selectTopic", "selectTopic", "topics", ["subexpr", "@mut", [["get", "pool.lTopicPool", ["loc", [null, [12, 60], [12, 75]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [12, 10], [12, 77]]], 0, 0]],
-        locals: [],
-        templates: []
-      };
-    })();
-    return {
-      meta: {
-        "revision": "Ember@2.9.1",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 61,
-            "column": 6
-          }
-        },
-        "moduleName": "visual-pool/templates/poolingmethod.hbs"
-      },
-      isEmpty: false,
-      arity: 0,
-      cachedFragment: null,
-      hasRendered: false,
-      buildFragment: function buildFragment(dom) {
-        var el0 = dom.createDocumentFragment();
-        var el1 = dom.createElement("div");
-        dom.setAttribute(el1, "class", "row");
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "container col-md-8");
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "row");
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-9");
-        var el5 = dom.createTextNode("\n        ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n      ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-2");
-        var el5 = dom.createTextNode("\n");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("      ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-1");
-        var el5 = dom.createTextNode("\n        ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n      ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n    ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "row");
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-12");
-        var el5 = dom.createTextNode("\n        ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n      ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n    ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "col-md-2");
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "container col-md-2");
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "row");
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-12");
-        var el5 = dom.createTextNode("\n        ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n      ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n    ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("div");
-        dom.setAttribute(el3, "class", "row");
-        dom.setAttribute(el3, "style", "margin-top:7px");
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("div");
-        dom.setAttribute(el4, "class", "col-md-12");
-        var el5 = dom.createTextNode("\n        ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("\n      ");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n    ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n");
-        dom.appendChild(el1, el2);
-        dom.appendChild(el0, el1);
-        var el1 = dom.createTextNode("\n");
-        dom.appendChild(el0, el1);
-        var el1 = dom.createElement("div");
-        dom.setAttribute(el1, "class", "row");
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "col-md-8");
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "col-md-2");
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n  ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2, "class", "col-md-2");
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n  ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n");
-        dom.appendChild(el1, el2);
-        dom.appendChild(el0, el1);
-        return el0;
-      },
-      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [0]);
-        var element1 = dom.childAt(element0, [1]);
-        var element2 = dom.childAt(element1, [1]);
-        var element3 = dom.childAt(element0, [5]);
-        var element4 = dom.childAt(fragment, [2]);
-        var morphs = new Array(10);
-        morphs[0] = dom.createMorphAt(dom.childAt(element2, [1]), 1, 1);
-        morphs[1] = dom.createMorphAt(dom.childAt(element2, [3]), 1, 1);
-        morphs[2] = dom.createMorphAt(dom.childAt(element2, [5]), 1, 1);
-        morphs[3] = dom.createMorphAt(dom.childAt(element1, [3, 1]), 1, 1);
-        morphs[4] = dom.createMorphAt(dom.childAt(element0, [3]), 1, 1);
-        morphs[5] = dom.createMorphAt(dom.childAt(element3, [1, 1]), 1, 1);
-        morphs[6] = dom.createMorphAt(dom.childAt(element3, [3, 1]), 1, 1);
-        morphs[7] = dom.createMorphAt(dom.childAt(element4, [1]), 1, 1);
-        morphs[8] = dom.createMorphAt(dom.childAt(element4, [3]), 1, 1);
-        morphs[9] = dom.createMorphAt(dom.childAt(element4, [5]), 1, 1);
-        return morphs;
-      },
-      statements: [["inline", "poolstrategy-selector", [], ["poolStrategies", ["subexpr", "@mut", [["get", "pool.lPoolStrategy", ["loc", [null, [6, 25], [6, 43]]], 0, 0, 0, 0]], [], [], 0, 0], "selected", ["subexpr", "@mut", [["get", "poolStrategySelected", ["loc", [null, [7, 19], [7, 39]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [5, 8], [7, 41]]], 0, 0], ["block", "if", [["get", "loading", ["loc", [null, [10, 14], [10, 21]]], 0, 0, 0, 0]], [], 0, 1, ["loc", [null, [10, 8], [13, 15]]]], ["inline", "canvas-visual-pool-view-selector", [], ["viewSelector", ["subexpr", "@mut", [["get", "viewSelector", ["loc", [null, [17, 23], [17, 35]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [16, 8], [17, 37]]], 0, 0], ["inline", "canvas-visual-pool", [], ["viewSelector", ["subexpr", "@mut", [["get", "viewSelector", ["loc", [null, [23, 23], [23, 35]]], 0, 0, 0, 0]], [], [], 0, 0], "topicSelected", ["subexpr", "@mut", [["get", "topicSelected", ["loc", [null, [24, 24], [24, 37]]], 0, 0, 0, 0]], [], [], 0, 0], "lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [25, 26], [25, 41]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [22, 8], [25, 43]]], 0, 0], ["inline", "poolstrategy-stats", [], ["topicSelected", ["subexpr", "@mut", [["get", "topicSelected", ["loc", [null, [31, 20], [31, 33]]], 0, 0, 0, 0]], [], [], 0, 0], "lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [32, 22], [32, 37]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [30, 4], [32, 39]]], 0, 0], ["inline", "poolstrategy-player", [], ["stepForward", "stepForward", "fastForward", "fastForward"], ["loc", [null, [37, 8], [39, 37]]], 0, 0], ["inline", "poolstrategy-log", [], ["lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [45, 26], [45, 41]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [44, 8], [45, 43]]], 0, 0], ["inline", "upload-runs", [], ["updateTopicSelector", "updateTopicSelector"], ["loc", [null, [52, 4], [52, 61]]], 0, 0], ["content", "upload-qrels", ["loc", [null, [55, 4], [55, 20]]], 0, 0, 0, 0], ["inline", "download-qrels", [], ["lPooledDocument", ["subexpr", "@mut", [["get", "lPooledDocument", ["loc", [null, [59, 22], [59, 37]]], 0, 0, 0, 0]], [], [], 0, 0]], ["loc", [null, [58, 4], [59, 39]]], 0, 0]],
-      locals: [],
-      templates: [child0, child1]
-    };
-  })());
-});
 define('visual-pool/utils/zindex', ['exports', 'ember-dialog/utils/zindex'], function (exports, _emberDialogUtilsZindex) {
   Object.defineProperty(exports, 'max', {
     enumerable: true,
@@ -6160,7 +7823,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+ebbe8442"});
+  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+94e43898"});
 }
 
 /* jshint ignore:end */

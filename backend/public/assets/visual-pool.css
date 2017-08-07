@@ -5989,4 +5989,12 @@ button.close {
 .selected > td {
   background-color: #AAAAAA !important; }
 
+.panel-profile-img {
+  max-width: 100px;
+  margin-top: -70px;
+  margin-bottom: 5px;
+  border: 3px solid #fff;
+  border-radius: 100%;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); }
+
 /*# sourceMappingURL=visual-pool.css.map */
