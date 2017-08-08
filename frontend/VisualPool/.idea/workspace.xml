@@ -22,11 +22,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="upload-qrels.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="upload-qrels.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/components/upload-qrels.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="7" column="13" lean-forward="true" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
+            <state relative-caret-position="180">
+              <caret line="12" column="27" lean-forward="true" selection-start-line="12" selection-start-column="27" selection-end-line="12" selection-end-column="27" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="about.hbs" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app/templates/about.hbs">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="360">
+              <caret line="109" column="40" lean-forward="false" selection-start-line="109" selection-start-column="40" selection-end-line="109" selection-end-column="40" />
               <folding />
             </state>
           </provider>
@@ -156,7 +166,6 @@
         <option value="$PROJECT_DIR$/ember-cli-build.js" />
         <option value="$PROJECT_DIR$/app/controllers/poolingmethod.js" />
         <option value="$PROJECT_DIR$/app/templates/components/poolstrategy-player.hbs" />
-        <option value="$PROJECT_DIR$/app/templates/about.hbs" />
         <option value="$PROJECT_DIR$/app/styles/app.scss" />
         <option value="$PROJECT_DIR$/app/styles/app.css" />
         <option value="$PROJECT_DIR$/app/templates/contact.hbs" />
@@ -167,6 +176,7 @@
         <option value="$PROJECT_DIR$/app/components/upload-runs.js" />
         <option value="$PROJECT_DIR$/app/initializers/pool.js" />
         <option value="$PROJECT_DIR$/app/components/poolstrategy-stats.js" />
+        <option value="$PROJECT_DIR$/app/templates/about.hbs" />
       </list>
     </option>
   </component>
@@ -436,12 +446,12 @@
       <workItem from="1501109152901" duration="52581000" />
       <workItem from="1501872697201" duration="547000" />
       <workItem from="1501875020827" duration="350000" />
-      <workItem from="1501879662907" duration="42991000" />
+      <workItem from="1501879662907" duration="43507000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="261520000" />
+    <option name="totallyTimeSpent" value="262036000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -658,14 +668,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
           <caret line="5" column="34" lean-forward="true" selection-start-line="5" selection-start-column="34" selection-end-line="5" selection-end-column="34" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/templates/about.hbs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="26" column="8" lean-forward="true" selection-start-line="8" selection-start-column="2" selection-end-line="26" selection-end-column="8" />
           <folding />
         </state>
       </provider>
@@ -906,8 +908,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/components/upload-qrels.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="13" lean-forward="true" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
+        <state relative-caret-position="180">
+          <caret line="12" column="27" lean-forward="true" selection-start-line="12" selection-start-column="27" selection-end-line="12" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/templates/about.hbs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="109" column="40" lean-forward="false" selection-start-line="109" selection-start-column="40" selection-end-line="109" selection-end-column="40" />
           <folding />
         </state>
       </provider>

@@ -5163,6 +5163,7 @@ define("visual-pool/templates/about", ["exports"], function (exports) {
         var el5 = dom.createTextNode("\n        In this paper we present a demo that enables the user to visualize\n        and interact with the pooling method. This demo addresses the\n        needs of four classes of users: test collection builders, researchers,\n        lecturers, and students. This solution aims to, by exploiting the\n        users’ sight, develop visual cues to guide the development of more\n        sophisticated analyses. This solution is open source (MIT licensed)\n        and is available in this GitHub ");
         dom.appendChild(el4, el5);
         var el5 = dom.createElement("a");
+        dom.setAttribute(el5, "href", "https://github.com/aldolipani/VisualPool");
         var el6 = dom.createTextNode("repository");
         dom.appendChild(el5, el6);
         dom.appendChild(el4, el5);
@@ -7823,7 +7824,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+94e43898"});
+  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+419f4b80"});
 }
 
 /* jshint ignore:end */
