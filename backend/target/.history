@@ -1,1 +1,12 @@
 run
+compile
+dist
+compile
+dist
+run
+clean
+compile
+dist
+compile
+dist
+ls

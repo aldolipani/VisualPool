@@ -242,7 +242,7 @@ class PoolingStrategy {
         if (!doc2Runs[lRunRecord[j].doc]) {
           doc2Runs[lRunRecord[j].doc] = [[runs.id, lRunRecord[j]]];
         } else {
-          doc2Runs[lRunRecord[j].doc].concat([runs.id, lRunRecord[j]]);
+          doc2Runs[lRunRecord[j].doc].push([runs.id, lRunRecord[j]]);
         }
       }
     }
@@ -440,7 +440,7 @@ class CombXTakeN extends TwoStagesStrategy {
         if (!doc2Runs[lRunRecord[j].doc]) {
           doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
         } else {
-          doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+          doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
         }
       }
     }
@@ -484,12 +484,18 @@ class CombXTakeN extends TwoStagesStrategy {
     let lDocScore = [];
     for (let doc in doc2RunRecord) {
       let lRunRecord = doc2RunRecord[doc];
-      let value = this.x(lRunRecord.map(runRecord => runRecord.normalizedScore));
+      let scores = lRunRecord.map(runRecord => runRecord.normalizedScore);
+      for(let i = 0; i < this.lRuns.length - lRunRecord.length; i++){
+        scores.push(0);
+      }
+      let value = this.x(scores);
       lDocScore.push({'doc': doc, 'value': value});
     }
-    lDocScore.sort(function (docScoreA, docScoreB) {
-      return docScoreB.value - docScoreA.value;
-    });
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+        return docScoreB.value - docScoreA.value;
+      });
+    console.log(lDocScore);
     return lDocScore;
   }
 
@@ -642,7 +648,7 @@ class BordaTakeN extends TwoStagesStrategy {
         if (!doc2Runs[lRunRecord[j].doc]) {
           doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
         } else {
-          doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+          doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
         }
       }
     }
@@ -660,7 +666,8 @@ class BordaTakeN extends TwoStagesStrategy {
       }
       lDocScore.push({'doc': doc, 'value': value});
     }
-    lDocScore.sort(function (docScoreA, docScoreB) {
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
       return docScoreB.value - docScoreA.value;
     });
     return lDocScore;
@@ -747,9 +754,10 @@ class CondorcetTakeN extends TwoStagesStrategy {
       }
       lDocScore.push({'doc': doc0, 'value': value});
     }
-    lDocScore.sort(function (docScoreA, docScoreB) {
-      return docScoreB.value - docScoreA.value;
-    });
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+        return docScoreB.value - docScoreA.value;
+      });
     return lDocScore;
   }
 
@@ -801,7 +809,7 @@ class MeasureBasedTakeN extends TwoStagesStrategy {
         if (!doc2Runs[lRunRecord[j].doc]) {
           doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
         } else {
-          doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+          doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
         }
       }
     }
@@ -820,9 +828,10 @@ class MeasureBasedTakeN extends TwoStagesStrategy {
       let value = this.x(lRunRecord.map(runRecord => runRecord.rank));
       lDocScore.push({'doc': doc, 'value': value});
     }
-    lDocScore.sort(function (docScoreA, docScoreB) {
-      return docScoreA.value - docScoreB.value;
-    });
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+        return docScoreA.value - docScoreB.value;
+      });
     return lDocScore;
   }
 
@@ -973,9 +982,10 @@ class RBPAdaptiveTakeN extends TwoStagesStrategy {
       }
       lDocScore.push({'doc': doc, 'value': sum});
     }
-    lDocScore.sort(function (docScoreA, docScoreB) {
-      return docScoreB.value - docScoreA.value;
-    });
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+        return docScoreB.value - docScoreA.value;
+      });
     console.log(lDocScore);
     let res = lDocScore[0].doc;
     delete doc2RunsIdRunRecord[res];
@@ -1061,9 +1071,10 @@ class RBPAdaptiveStarTakeN extends PoolingStrategy {
       }
       lDocScore.push({'doc': doc, 'value': sum});
     }
-    lDocScore.sort(function (docScoreA, docScoreB) {
-      return docScoreB.value - docScoreA.value;
-    });
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+       return docScoreB.value - docScoreA.value;
+      });
     let res = lDocScore[0].doc;
     delete doc2RunsIdRunRecord[res];
     return res;
@@ -1357,9 +1368,10 @@ class HedgeTakeN extends PoolingStrategy {
       }
       lDocScore.push({'doc': doc, 'value': value});
     }
-    this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
-      return docScoreB.value - docScoreA.value;
-    });
+    lDocScore =
+      this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+        return docScoreB.value - docScoreA.value;
+      });
     console.log(lDocScore);
     let i;
     for (i = 0; i < lDocScore.length; i++) {

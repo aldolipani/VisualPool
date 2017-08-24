@@ -2231,7 +2231,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
             if (!doc2Runs[lRunRecord[j].doc]) {
               doc2Runs[lRunRecord[j].doc] = [[runs.id, lRunRecord[j]]];
             } else {
-              doc2Runs[lRunRecord[j].doc].concat([runs.id, lRunRecord[j]]);
+              doc2Runs[lRunRecord[j].doc].push([runs.id, lRunRecord[j]]);
             }
           }
         }
@@ -2686,7 +2686,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
             if (!doc2Runs[lRunRecord[j].doc]) {
               doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
             } else {
-              doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+              doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
             }
           }
         }
@@ -2733,14 +2733,19 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         var lDocScore = [];
         for (var doc in doc2RunRecord) {
           var lRunRecord = doc2RunRecord[doc];
-          var value = this.x(lRunRecord.map(function (runRecord) {
+          var scores = lRunRecord.map(function (runRecord) {
             return runRecord.normalizedScore;
-          }));
+          });
+          for (var i = 0; i < this.lRuns.length - lRunRecord.length; i++) {
+            scores.push(0);
+          }
+          var value = this.x(scores);
           lDocScore.push({ 'doc': doc, 'value': value });
         }
-        lDocScore.sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
+        console.log(lDocScore);
         return lDocScore;
       }
     }, {
@@ -2988,7 +2993,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
             if (!doc2Runs[lRunRecord[j].doc]) {
               doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
             } else {
-              doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+              doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
             }
           }
         }
@@ -3007,7 +3012,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           }
           lDocScore.push({ 'doc': doc, 'value': value });
         }
-        lDocScore.sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
         return lDocScore;
@@ -3138,7 +3143,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           }
           lDocScore.push({ 'doc': doc0, 'value': value });
         }
-        lDocScore.sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
         return lDocScore;
@@ -3235,7 +3240,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
             if (!doc2Runs[lRunRecord[j].doc]) {
               doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
             } else {
-              doc2Runs[lRunRecord[j].doc].concat(lRunRecord[j]);
+              doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
             }
           }
         }
@@ -3258,7 +3263,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           }));
           lDocScore.push({ 'doc': doc, 'value': value });
         }
-        lDocScore.sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreA.value - docScoreB.value;
         });
         return lDocScore;
@@ -3571,7 +3576,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
           lDocScore.push({ 'doc': doc, 'value': sum });
         }
-        lDocScore.sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
         console.log(lDocScore);
@@ -3742,7 +3747,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
           lDocScore.push({ 'doc': doc, 'value': sum });
         }
-        lDocScore.sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
         var res = lDocScore[0].doc;
@@ -4153,7 +4158,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
           lDocScore.push({ 'doc': doc, 'value': value });
         }
-        this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
+        lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
         console.log(lDocScore);
@@ -7824,7 +7829,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+419f4b80"});
+  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+0d4a7c93"});
 }
 
 /* jshint ignore:end */

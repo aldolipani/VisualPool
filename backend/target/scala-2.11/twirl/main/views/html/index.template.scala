@@ -46,7 +46,16 @@ Seq[Any](format.raw/*1.4*/("""
 
     <script src="/assets/vendor.js"></script>
     <script src="/assets/visual-pool.js"></script>
+  <script>
+          (function(i,s,o,g,r,a,m)"""),format.raw/*26.35*/("""{"""),format.raw/*26.36*/("""i['GoogleAnalyticsObject']=r;i[r]=i[r]||function()"""),format.raw/*26.86*/("""{"""),format.raw/*26.87*/("""
+                      """),format.raw/*27.23*/("""(i[r].q=i[r].q||[]).push(arguments)"""),format.raw/*27.58*/("""}"""),format.raw/*27.59*/(""",i[r].l=1*new Date();a=s.createElement(o),
+                  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          """),format.raw/*29.11*/("""}"""),format.raw/*29.12*/(""")(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
+          ga('create', 'UA-40849842-3', 'auto');
+          ga('send', 'pageview');
+
+  </script>
     <div id="ember-bootstrap-wormhole"></div>
   </body>
 
@@ -70,11 +79,11 @@ Seq[Any](format.raw/*1.4*/("""
 object index extends index_Scope0.index
               /*
                   -- GENERATED --
-                  DATE: Tue Jun 13 16:35:46 EDT 2017
+                  DATE: Tue Aug 08 16:51:37 JST 2017
                   SOURCE: /Users/aldo/Projects/GitHub/VisualPool/backend/app/views/index.scala.html
-                  HASH: 08bf70cee9b86e66e25860223455751574f42ef4
-                  MATRIX: 520->1|616->3|643->4
-                  LINES: 20->1|25->1|26->2
+                  HASH: fec8f03e05a3684f51477b0ff7c2aee906f9e493
+                  MATRIX: 520->1|616->3|643->4|1833->1166|1862->1167|1940->1217|1969->1218|2020->1241|2083->1276|2112->1277|2291->1428|2320->1429
+                  LINES: 20->1|25->1|26->2|50->26|50->26|50->26|50->26|51->27|51->27|51->27|53->29|53->29
                   -- GENERATED --
               */
           

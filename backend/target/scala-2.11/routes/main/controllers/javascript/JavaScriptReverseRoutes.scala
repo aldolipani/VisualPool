@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:/Users/aldo/Projects/GitHub/VisualPool/backend/conf/routes
-// @DATE:Tue Jun 13 17:03:50 EDT 2017
+// @DATE:Tue Aug 08 16:51:37 JST 2017
 
 import play.api.routing.JavaScriptReverseRoute
 import play.api.mvc.{ QueryStringBindable, PathBindable, Call, JavascriptLiteral }

@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:/Users/aldo/Projects/GitHub/VisualPool/backend/conf/routes
-// @DATE:Tue Jun 13 17:03:50 EDT 2017
+// @DATE:Tue Aug 08 16:51:37 JST 2017
 
 package router
 
@@ -43,7 +43,7 @@ class Routes(
 
   def documentation = List(
     ("""GET""", this.prefix, """controllers.HomeController.index"""),
-    ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """poolingmethod""", """controllers.HomeController.index"""),
+    ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """app""", """controllers.HomeController.index"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """assets/""" + "$" + """file<.+>""", """controllers.Assets.at(path:String = "/public/assets", file:String)"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """fonts/""" + "$" + """file<.+>""", """controllers.Assets.at(path:String = "/public/fonts", file:String)"""),
     Nil
@@ -72,7 +72,7 @@ class Routes(
 
   // @LINE:2
   private[this] lazy val controllers_HomeController_index1_route = Route("GET",
-    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("poolingmethod")))
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("app")))
   )
   private[this] lazy val controllers_HomeController_index1_invoker = createInvoker(
     HomeController_0.index,
@@ -83,7 +83,7 @@ class Routes(
       Nil,
       "GET",
       """""",
-      this.prefix + """poolingmethod"""
+      this.prefix + """app"""
     )
   )
 
