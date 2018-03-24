@@ -2143,6 +2143,9 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       key: "setLRuns",
       value: function setLRuns(lRuns) {
         this.lRuns = lRuns;
+        this.lRuns.sort(function (a, b) {
+          return a.id > b.id ? 1 : b.id > a.id ? -1 : 0;
+        });
       }
     }, {
       key: "numberOfTopics",
@@ -3906,7 +3909,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       this.nQ = 0;
 
       this.tQRels = new _visualPoolComponentsUploadQrels.QRels();
-      this.mLNumRuns = {};
+      this.mMNumRuns = {};
       this.mMaxRunsId = {};
     }
 
@@ -3926,41 +3929,70 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         return doc;
       }
     }, {
-      key: "getBestDocument",
-      value: function getBestDocument(topic) {
+      key: "getLastRel",
+      value: function getLastRel(topic) {
         var rel = 0;
         if (this.tQRels.mQRel[topic]) {
           console.log(this.tQRels.mQRel[topic].mQRelRecord);
           rel = Object.values(this.tQRels.mQRel[topic].mQRelRecord)[Object.values(this.tQRels.mQRel[topic].mQRelRecord).length - 1].score;
         }
-        if (!this.mLNumRuns[topic]) {
-          this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
-        }
-        var lNumRuns = this.mLNumRuns[topic];
-        var maxRunsId = undefined;
-        if (rel < 1) {
-          var mRunsScores = {};
+        return rel;
+      }
+    }, {
+      key: "getNumRuns",
+      value: function getNumRuns(topic) {
+        if (!this.mMNumRuns[topic]) {
+          this.mMNumRuns[topic] = {};
           for (var i = 0; i < this.lRuns.length; i++) {
-            mRunsScores[this.lRuns[i].id] = 0;
-            for (var j = 0; j < lNumRuns[i]; j++) {
-              if (this.tQRels.getQRel(topic).getRel(this.lRuns[i].mRun[topic].lRunRecord[j].doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.NON_RELEVANT) {
-                mRunsScores[this.lRuns[i].id]--;
+            this.mMNumRuns[topic][this.lRuns[i].id] = 0;
+          }
+        }
+        return this.mMNumRuns[topic];
+      }
+    }, {
+      key: "getMRuns",
+      value: function getMRuns() {
+        var res = {};
+        for (var i = 0; i < this.lRuns.length; i++) {
+          res[this.lRuns[i].id] = this.lRuns[i];
+        }
+        return res;
+      }
+    }, {
+      key: "getBestDocument",
+      value: function getBestDocument(topic) {
+        var mRuns = this.getMRuns();
+        var rel = this.getLastRel(topic);
+        var mNumRuns = this.getNumRuns(topic);
+        var qRel = this.tQRels.getQRel(topic);
+
+        var maxRunsId = this.mMaxRunsId[topic];
+        if (rel === 0 || mNumRuns[maxRunsId] === mRuns[maxRunsId].mRun[topic].lRunRecord.length) {
+          // Compute runs scores
+          var mRunsScores = {};
+          for (var id in mRuns) {
+            mRunsScores[id] = 0;
+            for (var j = 0; j < mNumRuns[id]; j++) {
+              var doc = mRuns[id].mRun[topic].lRunRecord[j].doc;
+              if (qRel.getRel(doc) === _visualPoolComponentsUploadQrels.EnumPooledDocumentState.NON_RELEVANT) {
+                mRunsScores[id]++;
               }
             }
           }
-          console.log(mRunsScores);
-          var maxValue = -Infinity;
-          for (var i = 0; i < Object.values(mRunsScores).length; i++) {
-            if (Object.values(mRunsScores)[i] > maxValue && lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
-              maxValue = Object.values(mRunsScores)[i];
-              maxRunsId = i;
+          // Select the run with the minimum score
+          var minValue = Infinity;
+          for (var id in mRuns) {
+            if (mRunsScores[id] < minValue && mNumRuns[id] < mRuns[id].mRun[topic].lRunRecord.length) {
+              minValue = mRunsScores[id];
+              maxRunsId = id;
             }
           }
           this.mMaxRunsId[topic] = maxRunsId;
         }
+
         maxRunsId = this.mMaxRunsId[topic];
-        var res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
-        lNumRuns[maxRunsId]++;
+        var res = mRuns[maxRunsId].mRun[topic].lRunRecord[mNumRuns[maxRunsId]].doc;
+        mNumRuns[maxRunsId]++;
         return res;
       }
     }, {
@@ -3998,7 +4030,6 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
               }
 
               docs.add(doc);
-              //let pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
               pooledDocument = this.getPooledDocument(doc, this.qRels.getQRel(topic));
 
               this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);

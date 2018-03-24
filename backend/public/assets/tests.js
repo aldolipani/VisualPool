@@ -221,7 +221,7 @@ define('visual-pool/tests/initializers/pool.jshint', ['exports'], function (expo
   QUnit.module('JSHint | initializers/pool.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(false, 'initializers/pool.js should pass jshint.\ninitializers/pool.js: line 1807, col 9, \'jStat\' is not defined.\n\n1 error');
+    assert.ok(false, 'initializers/pool.js should pass jshint.\ninitializers/pool.js: line 1833, col 9, \'jStat\' is not defined.\n\n1 error');
   });
 });
 define('visual-pool/tests/initializers/runs.jshint', ['exports'], function (exports) {

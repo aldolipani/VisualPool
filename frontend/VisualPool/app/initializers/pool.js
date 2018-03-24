@@ -184,6 +184,7 @@ class PoolingStrategy {
 
   setLRuns(lRuns) {
     this.lRuns = lRuns;
+    this.lRuns.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);});
   }
 
   numberOfTopics() {
@@ -486,7 +487,7 @@ class CombXTakeN extends TwoStagesStrategy {
     for (let doc in doc2RunRecord) {
       let lRunRecord = doc2RunRecord[doc];
       let scores = lRunRecord.map(runRecord => runRecord.normalizedScore);
-      for(let i = 0; i < this.lRuns.length - lRunRecord.length; i++){
+      for (let i = 0; i < this.lRuns.length - lRunRecord.length; i++) {
         scores.push(0);
       }
       let value = this.x(scores);
@@ -671,11 +672,11 @@ class BordaTakeN extends TwoStagesStrategy {
     return res;
   }
 
-  getK(topic){
+  getK(topic) {
     let res = 0;
     for (let i = 0; i < this.lRuns.length; i++) {
       let lrr = this.lRuns[i].mRun[topic].lRunRecord;
-      res -= (this.D.value + lrr.length + 1)/2;
+      res -= (this.D.value + lrr.length + 1) / 2;
     }
     return res;
   }
@@ -693,7 +694,7 @@ class BordaTakeN extends TwoStagesStrategy {
         value -= lrr[i].rank;
       }
       let is = doc2RunIds[doc].values();
-      for(let i of is){
+      for (let i of is) {
         let lrr = this.lRuns[i].mRun[topic].lRunRecord;
         value += (this.D.value + lrr.length + 1) / 2;
       }
@@ -701,8 +702,8 @@ class BordaTakeN extends TwoStagesStrategy {
     }
     lDocScore =
       this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
-      return docScoreB.value - docScoreA.value;
-    });
+        return docScoreB.value - docScoreA.value;
+      });
     console.log(lDocScore);
     return lDocScore;
   }
@@ -1124,7 +1125,7 @@ class RBPAdaptiveStarTakeN extends PoolingStrategy {
     }
     lDocScore =
       this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
-       return docScoreB.value - docScoreA.value;
+        return docScoreB.value - docScoreA.value;
       });
     let res = lDocScore[0].doc;
     delete doc2RunsIdRunRecord[res];
@@ -1163,7 +1164,7 @@ class MTFTakeN extends PoolingStrategy {
     this.nQ = 0;
 
     this.tQRels = new QRels();
-    this.mLNumRuns = {};
+    this.mMNumRuns = {};
     this.mMaxRunsId = {};
   }
 
@@ -1180,43 +1181,69 @@ class MTFTakeN extends PoolingStrategy {
     return doc;
   }
 
-  getBestDocument(topic) {
+  getLastRel(topic){
     let rel = 0;
     if (this.tQRels.mQRel[topic]) {
       console.log(this.tQRels.mQRel[topic].mQRelRecord);
       rel =
         Object.values(
-          this.tQRels.mQRel[topic].mQRelRecord)[Object.values(this.tQRels.mQRel[topic].mQRelRecord).length - 1].score;
+          this.tQRels.mQRel[topic].mQRelRecord)[
+        Object.values(this.tQRels.mQRel[topic].mQRelRecord).length - 1].score;
     }
-    if (!this.mLNumRuns[topic]) {
-      this.mLNumRuns[topic] = new Array(this.lRuns.length).fill(0);
+    return rel;
+  }
+
+  getNumRuns(topic){
+    if (!this.mMNumRuns[topic]) {
+      this.mMNumRuns[topic] = {};
+      for(let i = 0; i < this.lRuns.length; i++){
+        this.mMNumRuns[topic][this.lRuns[i].id] = 0;
+      }
     }
-    let lNumRuns = this.mLNumRuns[topic];
-    let maxRunsId;
-    if (rel < 1) {
+    return this.mMNumRuns[topic];
+  }
+
+  getMRuns(){
+    let res = {};
+    for(let i = 0; i < this.lRuns.length; i++){
+      res[this.lRuns[i].id] = this.lRuns[i];
+    }
+    return res;
+  }
+
+  getBestDocument(topic) {
+    let mRuns = this.getMRuns();
+    let rel = this.getLastRel(topic);
+    let mNumRuns = this.getNumRuns(topic);
+    let qRel = this.tQRels.getQRel(topic);
+
+    let maxRunsId = this.mMaxRunsId[topic];
+    if (rel === 0 || mNumRuns[maxRunsId] === mRuns[maxRunsId].mRun[topic].lRunRecord.length) {
+      // Compute runs scores
       let mRunsScores = {};
-      for (let i = 0; i < this.lRuns.length; i++) {
-        mRunsScores[this.lRuns[i].id] = 0;
-        for (let j = 0; j < lNumRuns[i]; j++) {
-          if (this.tQRels.getQRel(topic).getRel(this.lRuns[i].mRun[topic].lRunRecord[j].doc) === EnumPooledDocumentState.NON_RELEVANT) {
-            mRunsScores[this.lRuns[i].id]--;
+      for (let id in mRuns){
+        mRunsScores[id] = 0;
+        for (let j = 0; j < mNumRuns[id]; j++) {
+          let doc = mRuns[id].mRun[topic].lRunRecord[j].doc;
+          if (qRel.getRel(doc) === EnumPooledDocumentState.NON_RELEVANT) {
+            mRunsScores[id]++;
           }
         }
       }
-      console.log(mRunsScores);
-      let maxValue = -Infinity;
-      for (let i = 0; i < Object.values(mRunsScores).length; i++) {
-        if (Object.values(mRunsScores)[i] > maxValue &&
-          lNumRuns[i] < this.lRuns[i].mRun[topic].lRunRecord.length) {
-          maxValue = Object.values(mRunsScores)[i];
-          maxRunsId = i;
+      // Select the run with the minimum score
+      let minValue = Infinity;
+      for (let id in mRuns){
+        if (mRunsScores[id] < minValue && mNumRuns[id] < mRuns[id].mRun[topic].lRunRecord.length) {
+          minValue = mRunsScores[id];
+          maxRunsId = id;
         }
       }
       this.mMaxRunsId[topic] = maxRunsId;
     }
+
     maxRunsId = this.mMaxRunsId[topic];
-    let res = this.lRuns[maxRunsId].mRun[topic].lRunRecord[lNumRuns[maxRunsId]].doc;
-    lNumRuns[maxRunsId]++;
+    let res = mRuns[maxRunsId].mRun[topic].lRunRecord[mNumRuns[maxRunsId]].doc;
+    mNumRuns[maxRunsId]++;
     return res;
   }
 
@@ -1236,7 +1263,6 @@ class MTFTakeN extends PoolingStrategy {
       console.log(doc);
       if (!docs.has(doc)) {
         docs.add(doc);
-        //let pooledDocument = new this.getPooledDocument(doc, this.qRels.getQRel(topic));
         let pooledDocument = this.getPooledDocument(doc, this.qRels.getQRel(topic));
         this.tQRels.addAssessment(topic, pooledDocument.doc, pooledDocument.status);
         yield pooledDocument;
@@ -1336,32 +1362,32 @@ class HedgeTakeN extends PoolingStrategy {
   }
 
   l(runs, tQRel, doc2RunId2Rank, topic) {
-    if(!this.ll[topic]){
+    if (!this.ll[topic]) {
       this.ll[topic] = {};
     }
-    if(!this.ll[topic][runs.id]){
+    if (!this.ll[topic][runs.id]) {
       this.ll[topic][runs.id] = 0;
     }
     let cl = this.ll[topic][runs.id];
     let res = cl;
-    if(Object.values(tQRel.mQRelRecord).length > 0) {
+    if (Object.values(tQRel.mQRelRecord).length > 0) {
       let rel = Object.values(
         tQRel.mQRelRecord)[Object.values(tQRel.mQRelRecord).length - 1].score;
       let doc = Object.values(
         tQRel.mQRelRecord)[Object.values(tQRel.mQRelRecord).length - 1].doc;
 
-        //console.log("l parameters - 4");
-        //console.log(runs);
-        //console.log(tQRel);
-        //console.log(doc2RunId2Rank);
-        //console.log(topic);
-        if (rel === 0) {
-          res += this.gStar(doc, runs.id, doc2RunId2Rank, topic) / 2;
-        } else if (rel === 1) {
-          res -= this.gStar(doc, runs.id, doc2RunId2Rank, topic) / 2;
-        }
-        //}
-        this.ll[topic][runs.id] = res;
+      //console.log("l parameters - 4");
+      //console.log(runs);
+      //console.log(tQRel);
+      //console.log(doc2RunId2Rank);
+      //console.log(topic);
+      if (rel === 0) {
+        res += this.gStar(doc, runs.id, doc2RunId2Rank, topic) / 2;
+      } else if (rel === 1) {
+        res -= this.gStar(doc, runs.id, doc2RunId2Rank, topic) / 2;
+      }
+      //}
+      this.ll[topic][runs.id] = res;
 
     }
     return res;
@@ -1580,7 +1606,7 @@ class MABGreedyTakeN extends PoolingStrategy {
   }
 
   getBestDocument(topic) {
-    if(!this.mN[topic]){
+    if (!this.mN[topic]) {
       this.mN[topic] = 0;
     }
     this.mN[topic]++;
@@ -1676,7 +1702,7 @@ class MABUCBTakeN extends PoolingStrategy {
   }
 
   getBestDocument(topic) {
-    if(!this.mN[topic]){
+    if (!this.mN[topic]) {
       this.mN[topic] = 0;
     }
     this.mN[topic]++;
