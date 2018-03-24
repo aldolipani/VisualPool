@@ -1986,7 +1986,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       this.lRuns = [];
       this.mTopicPool = {};
       this.lTopicPool = _ember["default"].A();
-      this.lPoolStrategy = [new DepthD(), new TakeN(), new FairTakeN(), new BordaTakeN(), new CondorcetTakeN(), new CombMAXTakeN(), new CombMINTakeN(), new CombMEDTakeN(), new CombSUMTakeN(), new CombANZTakeN(), new CombMNZTakeN(), new DCGTakeN(), new RRFTakeN(), new RBPTakeN(), new RBPAdaptiveTakeN(), new RBPAdaptiveStarTakeN(), new MTFTakeN(), new HedgeTakeN(), new MABRandomTakeN(), new MABGreedyTakeN(), new MABUCBTakeN(), new MABBetaTakeN(), new MABMaxMeanTakeN()];
+      this.lPoolStrategy = [new DepthD(), new TakeN(), new FairTakeN(), new BordaTakeN(), new CondorcetTakeN(), new CombMAXTakeN(), new CombMINTakeN(), new CombMEDTakeN(), new CombSUMTakeN(), new CombANZTakeN(), new CombMNZTakeN(), new DCGTakeN(), new RRFTakeN(), new PPTakeN(), new RBPTakeN(), new RBPAdaptiveTakeN(), new RBPAdaptiveStarTakeN(), new MTFTakeN(), new HedgeTakeN(), new MABRandomTakeN(), new MABGreedyTakeN(), new MABUCBTakeN(), new MABBetaTakeN(), new MABMaxMeanTakeN()];
     }
 
     _createClass(Pool, [{
@@ -2677,20 +2677,20 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     }, {
       key: "getDoc2RunRecord",
       value: function getDoc2RunRecord(topic) {
-        var doc2Runs = {};
+        var res = {};
         var lRuns = this.lRuns;
         for (var i = 0; i < lRuns.length; i++) {
           var runs = lRuns[i];
           var lRunRecord = runs.mRun[topic].lRunRecord;
           for (var j = 0; j < lRunRecord.length; j++) {
-            if (!doc2Runs[lRunRecord[j].doc]) {
-              doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
+            if (!res[lRunRecord[j].doc]) {
+              res[lRunRecord[j].doc] = [lRunRecord[j]];
             } else {
-              doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
+              res[lRunRecord[j].doc].push(lRunRecord[j]);
             }
           }
         }
-        return doc2Runs;
+        return res;
       }
     }, {
       key: "addMinMaxNormalizedScore2LRuns",
@@ -2973,48 +2973,105 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       this.name = "BordaTake@N";
       // parameters
       this.N = new N(10000);
+      this.D = new D(1000000);
       this.nQ = 0;
     }
 
     _createClass(BordaTakeN, [{
       key: "getParameters",
       value: function getParameters() {
-        return [this.N];
+        return [this.N, this.D];
       }
     }, {
-      key: "getDoc2RunRecord",
-      value: function getDoc2RunRecord(topic) {
-        var doc2Runs = {};
-        var lRuns = this.lRuns;
-        for (var i = 0; i < lRuns.length; i++) {
-          var runs = lRuns[i];
-          var lRunRecord = runs.mRun[topic].lRunRecord;
-          for (var j = 0; j < lRunRecord.length; j++) {
-            if (!doc2Runs[lRunRecord[j].doc]) {
-              doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
+      key: "getDoc2RunRecords",
+      value: function getDoc2RunRecords(topic) {
+        var res = {};
+        for (var i = 0; i < this.lRuns.length; i++) {
+          var lrr = this.lRuns[i].mRun[topic].lRunRecord;
+          for (var j = 0; j < lrr.length; j++) {
+            if (!res[lrr[j].doc]) {
+              res[lrr[j].doc] = [lrr[j]];
             } else {
-              doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
+              res[lrr[j].doc].push(lrr[j]);
             }
           }
         }
-        return doc2Runs;
+        return res;
+      }
+    }, {
+      key: "getDoc2RunIds",
+      value: function getDoc2RunIds(topic) {
+        var res = {};
+        for (var i = 0; i < this.lRuns.length; i++) {
+          var lrr = this.lRuns[i].mRun[topic].lRunRecord;
+          for (var j = 0; j < lrr.length; j++) {
+            var doc = lrr[j].doc;
+            if (!res[doc]) {
+              res[doc] = new Set([i]);
+            } else {
+              res[doc].add(i);
+            }
+          }
+        }
+        return res;
+      }
+    }, {
+      key: "getK",
+      value: function getK(topic) {
+        var res = 0;
+        for (var i = 0; i < this.lRuns.length; i++) {
+          var lrr = this.lRuns[i].mRun[topic].lRunRecord;
+          res -= (this.D.value + lrr.length + 1) / 2;
+        }
+        return res;
       }
     }, {
       key: "getLDocScore",
       value: function getLDocScore(topic) {
-        var doc2RunRecord = this.getDoc2RunRecord(topic);
+        var doc2RunRecords = this.getDoc2RunRecords(topic);
+        var doc2RunIds = this.getDoc2RunIds(topic);
+        var k = this.getK(topic);
+
         var lDocScore = [];
-        for (var doc in doc2RunRecord) {
-          var lRunRecord = doc2RunRecord[doc];
-          var value = 0;
-          for (var i = 0; i < lRunRecord.length; i++) {
-            value += -lRunRecord[i].rank;
+        for (var doc in doc2RunRecords) {
+          var lrr = doc2RunRecords[doc];
+          var value = k;
+          for (var i = 0; i < lrr.length; i++) {
+            value -= lrr[i].rank;
           }
+          var is = doc2RunIds[doc].values();
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
+
+          try {
+            for (var _iterator3 = is[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var i = _step3.value;
+
+              var _lrr = this.lRuns[i].mRun[topic].lRunRecord;
+              value += (this.D.value + _lrr.length + 1) / 2;
+            }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+                _iterator3["return"]();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
+            }
+          }
+
           lDocScore.push({ 'doc': doc, 'value': value });
         }
         lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
+        console.log(lDocScore);
         return lDocScore;
       }
     }, {
@@ -3146,6 +3203,7 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
           return docScoreB.value - docScoreA.value;
         });
+        console.log(lDocScore);
         return lDocScore;
       }
     }, {
@@ -3264,8 +3322,9 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           lDocScore.push({ 'doc': doc, 'value': value });
         }
         lDocScore = this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
-          return docScoreA.value - docScoreB.value;
+          return docScoreB.value - docScoreA.value;
         });
+        console.log(lDocScore);
         return lDocScore;
       }
     }, {
@@ -3343,8 +3402,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     _createClass(DCGTakeN, [{
       key: "x",
       value: function x(vs) {
-        var sum = vs[0];
-        for (var i = 1; i < vs.length; i++) {
+        var sum = 0;
+        for (var i = 0; i < vs.length; i++) {
           sum += Math.log(2) / Math.log(vs[i] + 1);
         }
         return sum;
@@ -3373,8 +3432,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     }, {
       key: "x",
       value: function x(vs) {
-        var sum = vs[0];
-        for (var i = 1; i < vs.length; i++) {
+        var sum = 0;
+        for (var i = 0; i < vs.length; i++) {
           sum += 1 / (vs[i] + this.K.value);
         }
         return sum;
@@ -3384,8 +3443,33 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     return RRFTakeN;
   })(MeasureBasedTakeN);
 
-  var RBPTakeN = (function (_MeasureBasedTakeN3) {
-    _inherits(RBPTakeN, _MeasureBasedTakeN3);
+  var PPTakeN = (function (_MeasureBasedTakeN3) {
+    _inherits(PPTakeN, _MeasureBasedTakeN3);
+
+    function PPTakeN() {
+      _classCallCheck(this, PPTakeN);
+
+      _get(Object.getPrototypeOf(PPTakeN.prototype), "constructor", this).call(this);
+      this.name = "PPTake@N";
+    }
+
+    _createClass(PPTakeN, [{
+      key: "getParameters",
+      value: function getParameters() {
+        return [this.N];
+      }
+    }, {
+      key: "x",
+      value: function x(vs) {
+        return vs.length;
+      }
+    }]);
+
+    return PPTakeN;
+  })(MeasureBasedTakeN);
+
+  var RBPTakeN = (function (_MeasureBasedTakeN4) {
+    _inherits(RBPTakeN, _MeasureBasedTakeN4);
 
     function RBPTakeN() {
       _classCallCheck(this, RBPTakeN);
@@ -3403,8 +3487,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
     }, {
       key: "x",
       value: function x(vs) {
-        var sum = vs[0];
-        for (var i = 1; i < vs.length; i++) {
+        var sum = 0;
+        for (var i = 0; i < vs.length; i++) {
           sum += Math.pow(1 - this.P.value, vs[i] - 1);
         }
         return sum;
@@ -3416,38 +3500,6 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
 
   function rbp(p, run, qRel) {
     var res = 0;
-    var _iteratorNormalCompletion3 = true;
-    var _didIteratorError3 = false;
-    var _iteratorError3 = undefined;
-
-    try {
-      for (var _iterator3 = run.lRunRecord[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-        var rr = _step3.value;
-
-        if (qRel.getRel(rr.doc) >= 1) {
-          res += (1 - p) * Math.pow(p, rr.rank - 1);
-        }
-      }
-    } catch (err) {
-      _didIteratorError3 = true;
-      _iteratorError3 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-          _iterator3["return"]();
-        }
-      } finally {
-        if (_didIteratorError3) {
-          throw _iteratorError3;
-        }
-      }
-    }
-
-    return res;
-  }
-
-  function rbpResidual(p, run, qRel) {
-    var res = 1;
     var _iteratorNormalCompletion4 = true;
     var _didIteratorError4 = false;
     var _iteratorError4 = undefined;
@@ -3456,8 +3508,8 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       for (var _iterator4 = run.lRunRecord[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
         var rr = _step4.value;
 
-        if (qRel.getRel(rr.doc) < 0 || qRel.getRel(rr.doc) < _visualPoolComponentsUploadQrels.EnumPooledDocumentState.NON_RELEVANT) {
-          res -= (1 - p) * Math.pow(p, rr.rank - 1);
+        if (qRel.getRel(rr.doc) >= 1) {
+          res += (1 - p) * Math.pow(p, rr.rank - 1);
         }
       }
     } catch (err) {
@@ -3471,6 +3523,38 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
       } finally {
         if (_didIteratorError4) {
           throw _iteratorError4;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  function rbpResidual(p, run, qRel) {
+    var res = 1;
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
+
+    try {
+      for (var _iterator5 = run.lRunRecord[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        var rr = _step5.value;
+
+        if (qRel.getRel(rr.doc) < 0 || qRel.getRel(rr.doc) < _visualPoolComponentsUploadQrels.EnumPooledDocumentState.NON_RELEVANT) {
+          res -= (1 - p) * Math.pow(p, rr.rank - 1);
+        }
+      }
+    } catch (err) {
+      _didIteratorError5 = true;
+      _iteratorError5 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+          _iterator5["return"]();
+        }
+      } finally {
+        if (_didIteratorError5) {
+          throw _iteratorError5;
         }
       }
     }
@@ -3522,42 +3606,16 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         for (var doc in doc2RunsIdRunRecord) {
           var lRunsIdRunRecord = doc2RunsIdRunRecord[doc];
           var values = [];
-          var _iteratorNormalCompletion5 = true;
-          var _didIteratorError5 = false;
-          var _iteratorError5 = undefined;
-
-          try {
-            for (var _iterator5 = lRunsIdRunRecord[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-              var runsIdRunRecord = _step5.value;
-
-              var value = this.evalRunsIdRunRecord(runsIdRunRecord[0], runsIdRunRecord[1], mRunsScores);
-              values.push(value);
-            }
-          } catch (err) {
-            _didIteratorError5 = true;
-            _iteratorError5 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-                _iterator5["return"]();
-              }
-            } finally {
-              if (_didIteratorError5) {
-                throw _iteratorError5;
-              }
-            }
-          }
-
-          var sum = 0;
           var _iteratorNormalCompletion6 = true;
           var _didIteratorError6 = false;
           var _iteratorError6 = undefined;
 
           try {
-            for (var _iterator6 = values[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-              var value = _step6.value;
+            for (var _iterator6 = lRunsIdRunRecord[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+              var runsIdRunRecord = _step6.value;
 
-              sum += value;
+              var value = this.evalRunsIdRunRecord(runsIdRunRecord[0], runsIdRunRecord[1], mRunsScores);
+              values.push(value);
             }
           } catch (err) {
             _didIteratorError6 = true;
@@ -3570,6 +3628,32 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
             } finally {
               if (_didIteratorError6) {
                 throw _iteratorError6;
+              }
+            }
+          }
+
+          var sum = 0;
+          var _iteratorNormalCompletion7 = true;
+          var _didIteratorError7 = false;
+          var _iteratorError7 = undefined;
+
+          try {
+            for (var _iterator7 = values[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+              var value = _step7.value;
+
+              sum += value;
+            }
+          } catch (err) {
+            _didIteratorError7 = true;
+            _iteratorError7 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+                _iterator7["return"]();
+              }
+            } finally {
+              if (_didIteratorError7) {
+                throw _iteratorError7;
               }
             }
           }
@@ -3693,42 +3777,16 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         for (var doc in doc2RunsIdRunRecord) {
           var lRunsIdRunRecord = doc2RunsIdRunRecord[doc];
           var values = [];
-          var _iteratorNormalCompletion7 = true;
-          var _didIteratorError7 = false;
-          var _iteratorError7 = undefined;
-
-          try {
-            for (var _iterator7 = lRunsIdRunRecord[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-              var runsIdRunRecord = _step7.value;
-
-              var value = this.evalRunsIdRunRecord(runsIdRunRecord[0], runsIdRunRecord[1], mRunsScores);
-              values.push(value);
-            }
-          } catch (err) {
-            _didIteratorError7 = true;
-            _iteratorError7 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-                _iterator7["return"]();
-              }
-            } finally {
-              if (_didIteratorError7) {
-                throw _iteratorError7;
-              }
-            }
-          }
-
-          var sum = 0;
           var _iteratorNormalCompletion8 = true;
           var _didIteratorError8 = false;
           var _iteratorError8 = undefined;
 
           try {
-            for (var _iterator8 = values[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-              var value = _step8.value;
+            for (var _iterator8 = lRunsIdRunRecord[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+              var runsIdRunRecord = _step8.value;
 
-              sum += value;
+              var value = this.evalRunsIdRunRecord(runsIdRunRecord[0], runsIdRunRecord[1], mRunsScores);
+              values.push(value);
             }
           } catch (err) {
             _didIteratorError8 = true;
@@ -3741,6 +3799,32 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
             } finally {
               if (_didIteratorError8) {
                 throw _iteratorError8;
+              }
+            }
+          }
+
+          var sum = 0;
+          var _iteratorNormalCompletion9 = true;
+          var _didIteratorError9 = false;
+          var _iteratorError9 = undefined;
+
+          try {
+            for (var _iterator9 = values[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+              var value = _step9.value;
+
+              sum += value;
+            }
+          } catch (err) {
+            _didIteratorError9 = true;
+            _iteratorError9 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
+                _iterator9["return"]();
+              }
+            } finally {
+              if (_didIteratorError9) {
+                throw _iteratorError9;
               }
             }
           }
@@ -4094,29 +4178,29 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
         var lDocScore = [];
         var mRunsScores = {};
         var den = 0;
-        var _iteratorNormalCompletion9 = true;
-        var _didIteratorError9 = false;
-        var _iteratorError9 = undefined;
+        var _iteratorNormalCompletion10 = true;
+        var _didIteratorError10 = false;
+        var _iteratorError10 = undefined;
 
         try {
-          for (var _iterator9 = this.lRuns[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-            var runs = _step9.value;
+          for (var _iterator10 = this.lRuns[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+            var runs = _step10.value;
 
             mRunsScores[runs.id] = this.l(runs, this.tQRels.getQRel(topic), doc2RunId2Rank, topic);
             mRunsScores[runs.id] = Math.pow(this.Beta.value, mRunsScores[runs.id]);
             den += mRunsScores[runs.id];
           }
         } catch (err) {
-          _didIteratorError9 = true;
-          _iteratorError9 = err;
+          _didIteratorError10 = true;
+          _iteratorError10 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
-              _iterator9["return"]();
+            if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
+              _iterator10["return"]();
             }
           } finally {
-            if (_didIteratorError9) {
-              throw _iteratorError9;
+            if (_didIteratorError10) {
+              throw _iteratorError10;
             }
           }
         }
@@ -4125,13 +4209,13 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
           // compute l scores
           var value = 0;
 
-          var _iteratorNormalCompletion10 = true;
-          var _didIteratorError10 = false;
-          var _iteratorError10 = undefined;
+          var _iteratorNormalCompletion11 = true;
+          var _didIteratorError11 = false;
+          var _iteratorError11 = undefined;
 
           try {
-            for (var _iterator10 = this.lRuns[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-              var runs = _step10.value;
+            for (var _iterator11 = this.lRuns[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
+              var runs = _step11.value;
 
               value += mRunsScores[runs.id] / den * this.gStar(doc, runs.id, doc2RunId2Rank, topic);
               //console.log("loop");
@@ -4142,16 +4226,16 @@ define("visual-pool/initializers/pool", ["exports", "ember", "visual-pool/compon
               //console.log(value);
             }
           } catch (err) {
-            _didIteratorError10 = true;
-            _iteratorError10 = err;
+            _didIteratorError11 = true;
+            _iteratorError11 = err;
           } finally {
             try {
-              if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
-                _iterator10["return"]();
+              if (!_iteratorNormalCompletion11 && _iterator11["return"]) {
+                _iterator11["return"]();
               }
             } finally {
-              if (_didIteratorError10) {
-                throw _iteratorError10;
+              if (_didIteratorError11) {
+                throw _iteratorError11;
               }
             }
           }
@@ -7829,7 +7913,7 @@ catch(err) {
 /* jshint ignore:start */
 
 if (!runningTests) {
-  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+0d4a7c93"});
+  require("visual-pool/app")["default"].create({"LOG_RESOLVER":true,"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_TRANSITIONS_INTERNAL":true,"LOG_VIEW_LOOKUPS":true,"name":"visual-pool","version":"0.0.0+e52db865"});
 }
 
 /* jshint ignore:end */

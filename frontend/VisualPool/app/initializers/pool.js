@@ -29,6 +29,7 @@ class Pool {
       new CombMNZTakeN(),
       new DCGTakeN(),
       new RRFTakeN(),
+      new PPTakeN(),
       new RBPTakeN(),
       new RBPAdaptiveTakeN(),
       new RBPAdaptiveStarTakeN(),
@@ -431,20 +432,20 @@ class CombXTakeN extends TwoStagesStrategy {
   }
 
   getDoc2RunRecord(topic) {
-    let doc2Runs = {};
+    let res = {};
     let lRuns = this.lRuns;
     for (let i = 0; i < lRuns.length; i++) {
       let runs = lRuns[i];
       let lRunRecord = runs.mRun[topic].lRunRecord;
       for (let j = 0; j < lRunRecord.length; j++) {
-        if (!doc2Runs[lRunRecord[j].doc]) {
-          doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
+        if (!res[lRunRecord[j].doc]) {
+          res[lRunRecord[j].doc] = [lRunRecord[j]];
         } else {
-          doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
+          res[lRunRecord[j].doc].push(lRunRecord[j]);
         }
       }
     }
-    return doc2Runs;
+    return res;
   }
 
   addMinMaxNormalizedScore2LRuns() {
@@ -631,38 +632,70 @@ class BordaTakeN extends TwoStagesStrategy {
     this.name = "BordaTake@N";
     // parameters
     this.N = new N(10000);
+    this.D = new D(1000000);
     this.nQ = 0;
   }
 
   getParameters() {
-    return [this.N];
+    return [this.N, this.D];
   }
 
-  getDoc2RunRecord(topic) {
-    let doc2Runs = {};
-    let lRuns = this.lRuns;
-    for (let i = 0; i < lRuns.length; i++) {
-      let runs = lRuns[i];
-      let lRunRecord = runs.mRun[topic].lRunRecord;
-      for (let j = 0; j < lRunRecord.length; j++) {
-        if (!doc2Runs[lRunRecord[j].doc]) {
-          doc2Runs[lRunRecord[j].doc] = [lRunRecord[j]];
+  getDoc2RunRecords(topic) {
+    let res = {};
+    for (let i = 0; i < this.lRuns.length; i++) {
+      let lrr = this.lRuns[i].mRun[topic].lRunRecord;
+      for (let j = 0; j < lrr.length; j++) {
+        if (!res[lrr[j].doc]) {
+          res[lrr[j].doc] = [lrr[j]];
         } else {
-          doc2Runs[lRunRecord[j].doc].push(lRunRecord[j]);
+          res[lrr[j].doc].push(lrr[j]);
         }
       }
     }
-    return doc2Runs;
+    return res;
+  }
+
+  getDoc2RunIds(topic) {
+    let res = {};
+    for (let i = 0; i < this.lRuns.length; i++) {
+      let lrr = this.lRuns[i].mRun[topic].lRunRecord;
+      for (let j = 0; j < lrr.length; j++) {
+        let doc = lrr[j].doc;
+        if (!res[doc]) {
+          res[doc] = new Set([i]);
+        } else {
+          res[doc].add(i);
+        }
+      }
+    }
+    return res;
+  }
+
+  getK(topic){
+    let res = 0;
+    for (let i = 0; i < this.lRuns.length; i++) {
+      let lrr = this.lRuns[i].mRun[topic].lRunRecord;
+      res -= (this.D.value + lrr.length + 1)/2;
+    }
+    return res;
   }
 
   getLDocScore(topic) {
-    let doc2RunRecord = this.getDoc2RunRecord(topic);
+    let doc2RunRecords = this.getDoc2RunRecords(topic);
+    let doc2RunIds = this.getDoc2RunIds(topic);
+    let k = this.getK(topic);
+
     let lDocScore = [];
-    for (let doc in doc2RunRecord) {
-      let lRunRecord = doc2RunRecord[doc];
-      let value = 0;
-      for (let i = 0; i < lRunRecord.length; i++) {
-        value += -lRunRecord[i].rank;
+    for (let doc in doc2RunRecords) {
+      let lrr = doc2RunRecords[doc];
+      let value = k;
+      for (let i = 0; i < lrr.length; i++) {
+        value -= lrr[i].rank;
+      }
+      let is = doc2RunIds[doc].values();
+      for(let i of is){
+        let lrr = this.lRuns[i].mRun[topic].lRunRecord;
+        value += (this.D.value + lrr.length + 1) / 2;
       }
       lDocScore.push({'doc': doc, 'value': value});
     }
@@ -670,6 +703,7 @@ class BordaTakeN extends TwoStagesStrategy {
       this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
       return docScoreB.value - docScoreA.value;
     });
+    console.log(lDocScore);
     return lDocScore;
   }
 
@@ -758,6 +792,7 @@ class CondorcetTakeN extends TwoStagesStrategy {
       this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
         return docScoreB.value - docScoreA.value;
       });
+    console.log(lDocScore);
     return lDocScore;
   }
 
@@ -830,8 +865,9 @@ class MeasureBasedTakeN extends TwoStagesStrategy {
     }
     lDocScore =
       this.shuffle(lDocScore).sort(function (docScoreA, docScoreB) {
-        return docScoreA.value - docScoreB.value;
+        return docScoreB.value - docScoreA.value;
       });
+    console.log(lDocScore);
     return lDocScore;
   }
 
@@ -867,8 +903,8 @@ class DCGTakeN extends MeasureBasedTakeN {
   }
 
   x(vs) {
-    let sum = vs[0];
-    for (let i = 1; i < vs.length; i++) {
+    let sum = 0;
+    for (let i = 0; i < vs.length; i++) {
       sum += Math.log(2) / Math.log(vs[i] + 1);
     }
     return sum;
@@ -887,11 +923,26 @@ class RRFTakeN extends MeasureBasedTakeN {
   }
 
   x(vs) {
-    let sum = vs[0];
-    for (let i = 1; i < vs.length; i++) {
+    let sum = 0;
+    for (let i = 0; i < vs.length; i++) {
       sum += 1 / (vs[i] + this.K.value);
     }
     return sum;
+  }
+}
+
+class PPTakeN extends MeasureBasedTakeN {
+  constructor() {
+    super();
+    this.name = "PPTake@N";
+  }
+
+  getParameters() {
+    return [this.N];
+  }
+
+  x(vs) {
+    return vs.length;
   }
 }
 
@@ -907,8 +958,8 @@ class RBPTakeN extends MeasureBasedTakeN {
   }
 
   x(vs) {
-    let sum = vs[0];
-    for (let i = 1; i < vs.length; i++) {
+    let sum = 0;
+    for (let i = 0; i < vs.length; i++) {
       sum += Math.pow(1 - this.P.value, vs[i] - 1);
     }
     return sum;
